@@ -27,6 +27,7 @@ import {
 
 const navigation = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { name: "Users", href: "/admin/users", icon: Users },
   { name: "Updates", href: "/admin/updates", icon: MessageCircle },
   { name: "Travel Diaries", href: "/admin/travel-diaries", icon: BookOpen },
   { name: "Experiences", href: "/admin/experiences", icon: Star },
@@ -36,7 +37,7 @@ const navigation = [
   { name: "Outfits", href: "/admin/outfits", icon: Shirt },
   { name: "Events", href: "/admin/events", icon: Calendar },
   { name: "Competitions", href: "/admin/competitions", icon: Trophy },
-  { name: "Fan Messages", href: "/admin/fan-messages", icon: Users },
+  { name: "Fan Messages", href: "/admin/fan-messages", icon: MessageCircle },
   { name: "Polls", href: "/admin/polls", icon: Target },
   { name: "Quizzes", href: "/admin/quizzes", icon: BookOpen },
   { name: "Daily Quotes", href: "/admin/quotes", icon: Quote },
