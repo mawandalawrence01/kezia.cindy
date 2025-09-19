@@ -14,9 +14,10 @@ import {
   X,
   CheckCircle
 } from "lucide-react";
+import CommentSection from "./CommentSection";
 
 interface Outfit {
-  id: number;
+  id: string;
   title: string;
   description: string;
   category: 'traditional' | 'modern' | 'formal' | 'casual' | 'cultural';
@@ -60,6 +61,7 @@ export default function FashionLifestyle() {
   const [activeCategory, setActiveCategory] = useState<'all' | 'traditional' | 'modern' | 'formal' | 'casual' | 'cultural'>('all');
   const [outfits, setOutfits] = useState<Outfit[]>([]);
   const [loading, setLoading] = useState(true);
+  const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const fetchOutfits = async () => {
@@ -190,7 +192,7 @@ export default function FashionLifestyle() {
     { id: 'showcase', label: 'Fashion Showcase', icon: Crown }
   ];
 
-  const handleVote = (outfitId: number) => {
+  const handleVote = (outfitId: string) => {
     // In a real app, this would make an API call
     console.log(`Voted for outfit ${outfitId}`);
   };
@@ -221,6 +223,13 @@ export default function FashionLifestyle() {
       // You could also set a specific filter for this collection
       console.log(`Viewing collection: ${collection.name}`);
     }
+  };
+
+  const handleCommentCountChange = (outfitId: string, count: number) => {
+    setCommentCounts(prev => ({
+      ...prev,
+      [outfitId]: count
+    }));
   };
 
   const handleShare = (outfit: Outfit) => {
@@ -661,42 +670,50 @@ export default function FashionLifestyle() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <button 
-                      onClick={() => handleLike(selectedOutfit)}
-                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all ${
-                        selectedOutfit.isVoted 
-                          ? 'bg-uganda-red text-background' 
-                          : 'bg-muted text-muted-foreground hover:bg-uganda-red hover:text-background'
-                      }`}
-                    >
-                      <Heart className={`h-4 w-4 ${selectedOutfit.isVoted ? 'fill-current' : ''}`} />
-                      <span>{selectedOutfit.votes} votes</span>
-                    </button>
-                    <button 
-                      onClick={() => handleShare(selectedOutfit)}
-                      className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-green transition-colors"
-                    >
-                      <Share2 className="h-4 w-4" />
-                      <span>Share</span>
-                    </button>
-                    <button 
-                      onClick={() => handleDownload(selectedOutfit)}
-                      className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-gold transition-colors"
-                    >
-                      <Download className="h-4 w-4" />
-                      <span>Download</span>
-                    </button>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <button 
+                        onClick={() => handleLike(selectedOutfit)}
+                        className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all ${
+                          selectedOutfit.isVoted 
+                            ? 'bg-uganda-red text-background' 
+                            : 'bg-muted text-muted-foreground hover:bg-uganda-red hover:text-background'
+                        }`}
+                      >
+                        <Heart className={`h-4 w-4 ${selectedOutfit.isVoted ? 'fill-current' : ''}`} />
+                        <span>{selectedOutfit.votes} votes</span>
+                      </button>
+                      <button 
+                        onClick={() => handleShare(selectedOutfit)}
+                        className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-green transition-colors"
+                      >
+                        <Share2 className="h-4 w-4" />
+                        <span>Share</span>
+                      </button>
+                      <button 
+                        onClick={() => handleDownload(selectedOutfit)}
+                        className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-gold transition-colors"
+                      >
+                        <Download className="h-4 w-4" />
+                        <span>Download</span>
+                      </button>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      {selectedOutfit.tags.map((tag) => (
+                        <span key={tag} className="bg-uganda-gold/20 text-uganda-gold px-2 py-1 rounded text-xs">
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                   
-                  <div className="flex items-center space-x-2">
-                    {selectedOutfit.tags.map((tag) => (
-                      <span key={tag} className="bg-uganda-gold/20 text-uganda-gold px-2 py-1 rounded text-xs">
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
+                  {/* Comment Section */}
+                  <CommentSection 
+                    outfitId={selectedOutfit.id}
+                    onCommentCountChange={(count) => handleCommentCountChange(selectedOutfit.id, count)}
+                  />
                 </div>
               </div>
             </motion.div>

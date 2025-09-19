@@ -12,9 +12,10 @@ import {
   X,
   Camera
 } from "lucide-react";
+import CommentSection from "./CommentSection";
 
 interface Photo {
-  id: number;
+  id: string;
   title: string;
   description: string;
   image: string;
@@ -41,6 +42,7 @@ export default function Gallery() {
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const fetchPhotos = async () => {
@@ -103,7 +105,7 @@ export default function Gallery() {
     ? photos 
     : photos.filter(photo => photo.category.toLowerCase() === activeCategory);
 
-  const handleVote = (photoId: number) => {
+  const handleVote = (photoId: string) => {
     // In a real app, this would make an API call
     console.log(`Voted for photo ${photoId}`);
   };
@@ -142,6 +144,13 @@ export default function Gallery() {
     // In a real app, this would load more photos from the API
     console.log('Loading more photos...');
     alert('More photos would load here!');
+  };
+
+  const handleCommentCountChange = (photoId: string, count: number) => {
+    setCommentCounts(prev => ({
+      ...prev,
+      [photoId]: count
+    }));
   };
 
   return (
@@ -385,30 +394,45 @@ export default function Gallery() {
                 
                 <p className="text-muted-foreground mb-4">{selectedPhoto.description}</p>
                 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <button className="flex items-center space-x-2 bg-uganda-red text-background px-4 py-2 rounded-lg">
-                      <Heart className="h-4 w-4 fill-current" />
-                      <span>{selectedPhoto.votes || 0} votes</span>
-                    </button>
-                    <button 
-                      onClick={() => handleShare(selectedPhoto)}
-                      className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-green"
-                    >
-                      <Share2 className="h-4 w-4" />
-                      <span>Share</span>
-                    </button>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <button className="flex items-center space-x-2 bg-uganda-red text-background px-4 py-2 rounded-lg">
+                        <Heart className="h-4 w-4 fill-current" />
+                        <span>{selectedPhoto.votes || 0} votes</span>
+                      </button>
+                      <button 
+                        onClick={() => handleShare(selectedPhoto)}
+                        className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-green"
+                      >
+                        <Share2 className="h-4 w-4" />
+                        <span>Share</span>
+                      </button>
+                      <button 
+                        onClick={() => handleDownload(selectedPhoto)}
+                        className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-gold"
+                      >
+                        <Download className="h-4 w-4" />
+                        <span>Download</span>
+                      </button>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-muted-foreground">{new Date(selectedPhoto.date).toLocaleDateString()}</span>
+                      {selectedPhoto.location && (
+                        <>
+                          <span className="text-sm text-muted-foreground">•</span>
+                          <span className="text-sm text-uganda-green">{selectedPhoto.location}</span>
+                        </>
+                      )}
+                    </div>
                   </div>
                   
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-muted-foreground">{new Date(selectedPhoto.date).toLocaleDateString()}</span>
-                    {selectedPhoto.location && (
-                      <>
-                        <span className="text-sm text-muted-foreground">•</span>
-                        <span className="text-sm text-uganda-green">{selectedPhoto.location}</span>
-                      </>
-                    )}
-                  </div>
+                  {/* Comment Section */}
+                  <CommentSection 
+                    photoId={selectedPhoto.id}
+                    onCommentCountChange={(count) => handleCommentCountChange(selectedPhoto.id, count)}
+                  />
                 </div>
               </div>
             </motion.div>

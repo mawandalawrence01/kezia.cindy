@@ -15,9 +15,10 @@ import {
   Users,
   ChevronRight
 } from "lucide-react";
+import CommentSection from "./CommentSection";
 
 interface Update {
-  id: number;
+  id: string;
   title: string;
   content: string;
   date: string;
@@ -60,6 +61,7 @@ export default function QueensCorner() {
   const [travelDiaries, setTravelDiaries] = useState<TravelDiary[]>([]);
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [loading, setLoading] = useState(true);
+  const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -108,16 +110,26 @@ export default function QueensCorner() {
     { id: 'experiences', label: 'Experiences', icon: Star }
   ];
 
-  const handleLike = (updateId: number) => {
+  const handleLike = (updateId: string) => {
     // In a real app, this would make an API call
     console.log(`Liked update ${updateId}`);
     // You could also update the local state to show immediate feedback
   };
 
-  const handleComment = (updateId: number) => {
-    // In a real app, this would open a comment modal or navigate to a comment section
-    console.log(`Comment on update ${updateId}`);
-    alert('Comment functionality would open here!');
+  const handleCommentCountChange = (updateId: string, count: number) => {
+    setCommentCounts(prev => ({
+      ...prev,
+      [updateId]: count
+    }));
+    
+    // Update the updates array with new comment count
+    setUpdates(prev => 
+      prev.map(update => 
+        update.id === updateId 
+          ? { ...update, comments: count }
+          : update
+      )
+    );
   };
 
   const handleShare = (update: Update) => {
@@ -229,33 +241,34 @@ export default function QueensCorner() {
 
                     <p className="text-muted-foreground leading-relaxed mb-6">{update.content}</p>
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-6">
-                        <button 
-                          onClick={() => handleLike(update.id)}
-                          className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-red transition-colors"
-                        >
-                          <Heart className="h-5 w-5" />
-                          <span>{update.likes || 0}</span>
-                        </button>
-                        <button 
-                          onClick={() => handleComment(update.id)}
-                          className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-green transition-colors"
-                        >
-                          <MessageCircle className="h-5 w-5" />
-                          <span>{update.comments || 0}</span>
-                        </button>
-                        <button 
-                          onClick={() => handleShare(update)}
-                          className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-gold transition-colors"
-                        >
-                          <Share2 className="h-5 w-5" />
-                          <span>Share</span>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-6">
+                          <button 
+                            onClick={() => handleLike(update.id)}
+                            className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-red transition-colors"
+                          >
+                            <Heart className="h-5 w-5" />
+                            <span>{update.likes || 0}</span>
+                          </button>
+                          <button 
+                            onClick={() => handleShare(update)}
+                            className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-gold transition-colors"
+                          >
+                            <Share2 className="h-5 w-5" />
+                            <span>Share</span>
+                          </button>
+                        </div>
+                        <button className="text-uganda-gold hover:text-warm-gold transition-colors">
+                          <ChevronRight className="h-5 w-5" />
                         </button>
                       </div>
-                      <button className="text-uganda-gold hover:text-warm-gold transition-colors">
-                        <ChevronRight className="h-5 w-5" />
-                      </button>
+                      
+                      {/* Comment Section */}
+                      <CommentSection 
+                        updateId={update.id}
+                        onCommentCountChange={(count) => handleCommentCountChange(update.id, count)}
+                      />
                     </div>
                   </div>
                 </motion.article>
