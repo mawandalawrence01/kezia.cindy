@@ -23,6 +23,7 @@ import FashionLifestyle from "./components/FashionLifestyle";
 import Events from "./components/Events";
 import AIChatbot from "./components/AIChatbot";
 import UserAuth from "./components/UserAuth";
+import { GoogleOneTapClean } from "./components/GoogleOneTapClean";
 
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -68,6 +69,15 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cream via-background to-warm-gold">
+      {/* Google One Tap Authentication */}
+      <GoogleOneTapClean 
+        onSuccess={() => {
+          console.log('User signed in successfully')
+        }}
+        onError={(error) => {
+          console.error('Google One Tap error:', error)
+        }}
+      />
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-uganda-gold/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

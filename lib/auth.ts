@@ -1,6 +1,7 @@
 import { NextAuthOptions } from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
-import CredentialsProvider from "next-auth/providers/credentials"
+import { PrismaAdapter } from "@auth/prisma-adapter"
+import { prisma } from "./prisma"
 
 declare module "next-auth" {
   interface Session {
@@ -14,56 +15,38 @@ declare module "next-auth" {
 }
 
 export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
-    CredentialsProvider({
-      name: "credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null;
-        }
-
-        // Admin credentials check
-        if (credentials.email === "kezia.cindy@gmail.com" && credentials.password === "geniusmind") {
-          return {
-            id: "admin-user-id",
-            email: "kezia.cindy@gmail.com",
-            name: "Admin User",
-            image: null,
-          };
-        }
-
-        return null;
-      }
-    })
   ],
   callbacks: {
-    async session({ session, token }) {
-      if (session.user && token) {
-        session.user.id = token.id as string
+    async signIn() {
+      // Allow sign in
+      return true
+    },
+    async session({ session, user }) {
+      // Send properties to the client
+      if (session.user && user) {
+        (session.user as { id: string }).id = user.id
       }
       return session
     },
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id
+    async jwt({ token, account }) {
+      // Persist the OAuth access_token to the token right after signin
+      if (account) {
+        token.accessToken = account.access_token
       }
       return token
-    }
+    },
   },
   pages: {
     signIn: '/admin/login',
-    error: '/admin/login',
   },
   session: {
-    strategy: "jwt"
+    strategy: 'database',
   },
   secret: process.env.NEXTAUTH_SECRET,
 }
