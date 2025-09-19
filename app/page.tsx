@@ -4,12 +4,9 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Crown, 
-  Heart, 
   MapPin, 
   Camera, 
   Users, 
-  Calendar,
-  Star,
   ChevronDown,
   Menu,
   X,
@@ -21,24 +18,43 @@ import {
 import QueensCorner from "./components/QueensCorner";
 import Gallery from "./components/Gallery";
 import FanCommunity from "./components/FanCommunity";
+import TourismExplorer from "./components/TourismExplorer";
+import FashionLifestyle from "./components/FashionLifestyle";
+import Events from "./components/Events";
+import AIChatbot from "./components/AIChatbot";
 
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentQuote, setCurrentQuote] = useState(0);
-
-  const quotes = [
+  const [quotes, setQuotes] = useState([
     "The Pearl of Africa awaits your discovery",
     "Beauty is found in the heart of Uganda",
     "Every journey begins with a single step",
     "Culture is the soul of a nation"
-  ];
+  ]);
+
+  useEffect(() => {
+    const fetchQuotes = async () => {
+      try {
+        const response = await fetch('/api/quotes');
+        const data = await response.json();
+        if (data && data.text) {
+          setQuotes(prevQuotes => [data.text, ...prevQuotes.slice(1)]);
+        }
+      } catch (error) {
+        console.error('Error fetching daily quote:', error);
+      }
+    };
+
+    fetchQuotes();
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentQuote((prev) => (prev + 1) % quotes.length);
     }, 4000);
     return () => clearInterval(interval);
-  }, []);
+  }, [quotes]);
 
   const navigation = [
     { name: "Queen's Corner", href: "#queens-corner" },
@@ -150,7 +166,7 @@ export default function Home() {
               className="bg-gradient-to-r from-uganda-gold/20 to-uganda-green/20 rounded-lg p-6 max-w-2xl mx-auto"
             >
               <p className="text-lg font-medium italic text-foreground">
-                "{quotes[currentQuote]}"
+                &quot;{quotes[currentQuote]}&quot;
               </p>
             </motion.div>
 
@@ -214,6 +230,24 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Queen's Corner */}
+      <QueensCorner />
+
+      {/* Gallery */}
+      <Gallery />
+
+      {/* Fan Community */}
+      <FanCommunity />
+
+      {/* Tourism Explorer */}
+      <TourismExplorer />
+
+      {/* Fashion & Lifestyle */}
+      <FashionLifestyle />
+
+      {/* Events & Competitions */}
+      <Events />
+
       {/* Footer */}
       <footer className="bg-uganda-black text-cream py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -275,6 +309,9 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* AI Chatbot */}
+      <AIChatbot />
     </div>
   );
 }

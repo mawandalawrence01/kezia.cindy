@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Calendar, 
@@ -13,8 +13,7 @@ import {
   Star,
   Clock,
   Users,
-  ChevronRight,
-  Play
+  ChevronRight
 } from "lucide-react";
 
 interface Update {
@@ -40,90 +39,68 @@ interface TravelDiary {
   rating: number;
 }
 
+interface Experience {
+  id: number;
+  title: string;
+  description: string;
+  location: string;
+  date: string;
+  type: 'cultural' | 'adventure' | 'culinary' | 'wildlife';
+  category: string;
+  rating: number;
+  highlights: string[];
+  image?: string;
+  duration: string;
+  participants: number;
+}
+
 export default function QueensCorner() {
   const [activeTab, setActiveTab] = useState<'updates' | 'travel' | 'experiences'>('updates');
+  const [updates, setUpdates] = useState<Update[]>([]);
+  const [travelDiaries, setTravelDiaries] = useState<TravelDiary[]>([]);
+  const [experiences, setExperiences] = useState<Experience[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const updates: Update[] = [
-    {
-      id: 1,
-      title: "Exploring the Source of the Nile",
-      content: "Today I had the incredible opportunity to visit the Source of the Nile in Jinja. The power and beauty of this legendary river left me speechless. Standing where explorers once stood, I felt connected to Uganda's rich history and natural wonders.",
-      date: "2024-01-15",
-      location: "Jinja, Uganda",
-      likes: 1247,
-      comments: 89,
-      type: 'travel'
-    },
-    {
-      id: 2,
-      title: "Cultural Exchange with Local Communities",
-      content: "Spent the day learning traditional dances and crafts from the Baganda community. Their warmth and hospitality remind me why Uganda is truly the Pearl of Africa. Every interaction teaches me something new about our beautiful culture.",
-      date: "2024-01-12",
-      location: "Kampala, Uganda",
-      likes: 892,
-      comments: 67,
-      type: 'experience'
-    },
-    {
-      id: 3,
-      title: "Upcoming Tourism Week Events",
-      content: "Excited to announce that I'll be participating in the National Tourism Week celebrations! Join me for cultural performances, tourism exhibitions, and community outreach programs across different regions of Uganda.",
-      date: "2024-01-10",
-      likes: 1567,
-      comments: 134,
-      type: 'update'
-    }
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [updatesRes, travelRes, experiencesRes] = await Promise.all([
+          fetch('/api/updates'),
+          fetch('/api/travel-diaries'),
+          fetch('/api/experiences')
+        ]);
 
-  const travelDiaries: TravelDiary[] = [
-    {
-      id: 1,
-      title: "Murchison Falls Adventure",
-      location: "Murchison Falls National Park",
-      date: "2024-01-08",
-      content: "An unforgettable safari experience where I witnessed the raw power of nature. The falls were absolutely breathtaking, and the wildlife encounters were beyond my wildest dreams.",
-      images: ["/api/placeholder/400/300", "/api/placeholder/400/300", "/api/placeholder/400/300"],
-      highlights: ["Boat cruise to the falls", "Elephant encounters", "Traditional dance performance"],
-      rating: 5
-    },
-    {
-      id: 2,
-      title: "Bwindi Impenetrable Forest",
-      location: "Bwindi, Uganda",
-      date: "2024-01-05",
-      content: "Meeting the mountain gorillas was a life-changing experience. These gentle giants reminded me of the importance of conservation and our responsibility to protect Uganda's natural heritage.",
-      images: ["/api/placeholder/400/300", "/api/placeholder/400/300"],
-      highlights: ["Gorilla trekking", "Community visit", "Cultural storytelling"],
-      rating: 5
-    }
-  ];
+        const [updatesData, travelData, experiencesData] = await Promise.all([
+          updatesRes.json(),
+          travelRes.json(),
+          experiencesRes.json()
+        ]);
 
-  const experiences = [
-    {
-      id: 1,
-      title: "Learning Traditional Cooking",
-      description: "Mastered the art of preparing matooke and groundnut sauce with local chefs",
-      category: "Culinary",
-      duration: "3 hours",
-      participants: 12
-    },
-    {
-      id: 2,
-      title: "Basket Weaving Workshop",
-      description: "Created beautiful traditional baskets while learning about their cultural significance",
-      category: "Crafts",
-      duration: "2 hours",
-      participants: 8
-    },
-    {
-      id: 3,
-      title: "Drumming Circle",
-      description: "Learned traditional Ugandan rhythms and their meanings in cultural ceremonies",
-      category: "Music",
-      duration: "1.5 hours",
-      participants: 15
-    }
-  ];
+        setUpdates(updatesData);
+        setTravelDiaries(travelData);
+        setExperiences(experiencesData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <section id="queens-corner" className="py-20 bg-gradient-to-br from-cream/30 to-warm-gold/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-uganda-gold mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Loading Queen&apos;s Corner...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   const tabs = [
     { id: 'updates', label: 'Updates Hub', icon: MessageCircle },
@@ -140,7 +117,7 @@ export default function QueensCorner() {
           className="text-center mb-16"
         >
           <h2 className="text-4xl md:text-5xl font-bold text-uganda-green mb-4">
-            Queen's Corner
+            Queen&apos;s Corner
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             Follow my journey as Miss Tourism Uganda - from travel adventures to cultural experiences and behind-the-scenes moments
@@ -153,7 +130,7 @@ export default function QueensCorner() {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id as 'updates' | 'travel' | 'experiences')}
                 className={`flex items-center space-x-2 px-6 py-3 rounded-full transition-all ${
                   activeTab === tab.id
                     ? 'bg-gradient-to-r from-uganda-gold to-warm-gold text-uganda-black shadow-md'
@@ -199,7 +176,7 @@ export default function QueensCorner() {
                       </div>
                       <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                         <Calendar className="h-4 w-4" />
-                        <span>{update.date}</span>
+                        <span>{new Date(update.date).toLocaleDateString()}</span>
                       </div>
                     </div>
 
@@ -218,11 +195,11 @@ export default function QueensCorner() {
                       <div className="flex items-center space-x-6">
                         <button className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-red transition-colors">
                           <Heart className="h-5 w-5" />
-                          <span>{update.likes}</span>
+                          <span>{update.likes || 0}</span>
                         </button>
                         <button className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-green transition-colors">
                           <MessageCircle className="h-5 w-5" />
-                          <span>{update.comments}</span>
+                          <span>{update.comments || 0}</span>
                         </button>
                         <button className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-gold transition-colors">
                           <Share2 className="h-5 w-5" />
@@ -271,7 +248,7 @@ export default function QueensCorner() {
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-xl font-bold text-foreground">{diary.title}</h3>
-                      <span className="text-sm text-muted-foreground">{diary.date}</span>
+                      <span className="text-sm text-muted-foreground">{new Date(diary.date).toLocaleDateString()}</span>
                     </div>
                     
                     <div className="flex items-center space-x-2 text-uganda-green mb-4">
@@ -323,11 +300,9 @@ export default function QueensCorner() {
                       {experience.category}
                     </span>
                     <div className="flex items-center space-x-1 text-uganda-gold">
-                      <Star className="h-4 w-4 fill-current" />
-                      <Star className="h-4 w-4 fill-current" />
-                      <Star className="h-4 w-4 fill-current" />
-                      <Star className="h-4 w-4 fill-current" />
-                      <Star className="h-4 w-4 fill-current" />
+                      {[...Array(experience.rating)].map((_, i) => (
+                        <Star key={i} className="h-4 w-4 fill-current" />
+                      ))}
                     </div>
                   </div>
 

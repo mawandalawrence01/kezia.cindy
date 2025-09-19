@@ -1,21 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Heart, 
-  MessageCircle, 
   Share2, 
-  Star,
   Trophy,
-  Camera,
-  Filter,
   Grid,
   List,
-  ChevronLeft,
-  ChevronRight,
   Download,
-  Eye
+  X,
+  Camera
 } from "lucide-react";
 
 interface Photo {
@@ -44,89 +39,46 @@ export default function Gallery() {
   const [activeCategory, setActiveCategory] = useState<'all' | 'nature' | 'culture' | 'fashion' | 'events'>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPhotos = async () => {
+      try {
+        const response = await fetch('/api/photos');
+        const data = await response.json();
+        setPhotos(data);
+      } catch (error) {
+        console.error('Error fetching photos:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPhotos();
+  }, []);
 
   const categories = [
-    { id: 'all', label: 'All Photos', count: 156 },
-    { id: 'nature', label: 'Nature & Wildlife', count: 45 },
-    { id: 'culture', label: 'Cultural Heritage', count: 38 },
-    { id: 'fashion', label: 'Fashion & Style', count: 32 },
-    { id: 'events', label: 'Events & Appearances', count: 41 }
+    { id: 'all', label: 'All Photos', count: photos.length },
+    { id: 'nature', label: 'Nature & Wildlife', count: photos.filter(p => p.category === 'nature').length },
+    { id: 'culture', label: 'Cultural Heritage', count: photos.filter(p => p.category === 'culture').length },
+    { id: 'fashion', label: 'Fashion & Style', count: photos.filter(p => p.category === 'fashion').length },
+    { id: 'events', label: 'Events & Appearances', count: photos.filter(p => p.category === 'events').length }
   ];
 
-  const photos: Photo[] = [
-    {
-      id: 1,
-      title: "Sunset at Murchison Falls",
-      description: "The golden hour at one of Uganda's most spectacular natural wonders",
-      image: "/api/placeholder/400/600",
-      category: 'nature',
-      votes: 1247,
-      isVoted: false,
-      date: "2024-01-15",
-      location: "Murchison Falls National Park",
-      tags: ["sunset", "waterfalls", "nature", "golden hour"]
-    },
-    {
-      id: 2,
-      title: "Traditional Dance Performance",
-      description: "Capturing the vibrant energy of Ugandan cultural dances",
-      image: "/api/placeholder/400/600",
-      category: 'culture',
-      votes: 892,
-      isVoted: true,
-      date: "2024-01-12",
-      location: "Kampala Cultural Center",
-      tags: ["dance", "culture", "traditional", "performance"]
-    },
-    {
-      id: 3,
-      title: "Elegant Evening Gown",
-      description: "Showcasing modern African fashion with traditional influences",
-      image: "/api/placeholder/400/600",
-      category: 'fashion',
-      votes: 1567,
-      isVoted: false,
-      date: "2024-01-10",
-      location: "Kampala Fashion Week",
-      tags: ["fashion", "gown", "elegant", "african design"]
-    },
-    {
-      id: 4,
-      title: "Tourism Week Opening",
-      description: "Celebrating Uganda's tourism potential with local communities",
-      image: "/api/placeholder/400/600",
-      category: 'events',
-      votes: 743,
-      isVoted: false,
-      date: "2024-01-08",
-      location: "National Theatre, Kampala",
-      tags: ["tourism", "event", "community", "celebration"]
-    },
-    {
-      id: 5,
-      title: "Gorilla Encounter",
-      description: "A magical moment with Uganda's gentle giants",
-      image: "/api/placeholder/400/600",
-      category: 'nature',
-      votes: 2134,
-      isVoted: true,
-      date: "2024-01-05",
-      location: "Bwindi Impenetrable Forest",
-      tags: ["gorillas", "wildlife", "conservation", "bwindi"]
-    },
-    {
-      id: 6,
-      title: "Market Day Colors",
-      description: "The vibrant colors and energy of local markets",
-      image: "/api/placeholder/400/600",
-      category: 'culture',
-      votes: 567,
-      isVoted: false,
-      date: "2024-01-03",
-      location: "Owino Market, Kampala",
-      tags: ["market", "colors", "local life", "vibrant"]
-    }
-  ];
+  if (loading) {
+    return (
+      <section id="gallery" className="py-20 bg-gradient-to-br from-uganda-green/5 to-uganda-gold/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-uganda-gold mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Loading Gallery...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
 
   const topPicks: TopPick[] = [
     {
@@ -149,7 +101,7 @@ export default function Gallery() {
 
   const filteredPhotos = activeCategory === 'all' 
     ? photos 
-    : photos.filter(photo => photo.category === activeCategory);
+    : photos.filter(photo => photo.category.toLowerCase() === activeCategory);
 
   const handleVote = (photoId: number) => {
     // In a real app, this would make an API call
@@ -168,7 +120,7 @@ export default function Gallery() {
             Gallery & Fan Voting
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Vote for your favorite photos and help us showcase the best of Uganda's beauty and culture
+            Vote for your favorite photos and help us showcase the best of Uganda&apos;s beauty and culture
           </p>
         </motion.div>
 
@@ -232,7 +184,7 @@ export default function Gallery() {
             {categories.map((category) => (
               <button
                 key={category.id}
-                onClick={() => setActiveCategory(category.id as any)}
+                onClick={() => setActiveCategory(category.id as 'all' | 'nature' | 'culture' | 'fashion' | 'events')}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                   activeCategory === category.id
                     ? 'bg-gradient-to-r from-uganda-gold to-warm-gold text-uganda-black shadow-md'
@@ -301,17 +253,13 @@ export default function Gallery() {
                   <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{photo.description}</p>
                   
                   <div className="flex items-center space-x-2 text-xs text-muted-foreground mb-3">
-                    <span>{photo.date}</span>
-                    <span>•</span>
-                    <span>{photo.location}</span>
-                  </div>
-
-                  <div className="flex flex-wrap gap-1 mb-4">
-                    {photo.tags.slice(0, 2).map((tag) => (
-                      <span key={tag} className="bg-uganda-gold/20 text-uganda-gold px-2 py-1 rounded text-xs">
-                        #{tag}
-                      </span>
-                    ))}
+                    <span>{new Date(photo.date).toLocaleDateString()}</span>
+                    {photo.location && (
+                      <>
+                        <span>•</span>
+                        <span>{photo.location}</span>
+                      </>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -320,14 +268,10 @@ export default function Gallery() {
                         e.stopPropagation();
                         handleVote(photo.id);
                       }}
-                      className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all ${
-                        photo.isVoted
-                          ? 'bg-uganda-red text-background'
-                          : 'bg-muted text-muted-foreground hover:bg-uganda-red hover:text-background'
-                      }`}
+                      className="flex items-center space-x-2 px-3 py-2 rounded-lg transition-all bg-muted text-muted-foreground hover:bg-uganda-red hover:text-background"
                     >
-                      <Heart className={`h-4 w-4 ${photo.isVoted ? 'fill-current' : ''}`} />
-                      <span className="text-sm font-medium">{photo.votes}</span>
+                      <Heart className="h-4 w-4" />
+                      <span className="text-sm font-medium">{photo.votes || 0}</span>
                     </button>
                     
                     <div className="flex items-center space-x-2">
@@ -391,7 +335,7 @@ export default function Gallery() {
                   <div className="flex items-center space-x-4">
                     <button className="flex items-center space-x-2 bg-uganda-red text-background px-4 py-2 rounded-lg">
                       <Heart className="h-4 w-4 fill-current" />
-                      <span>{selectedPhoto.votes} votes</span>
+                      <span>{selectedPhoto.votes || 0} votes</span>
                     </button>
                     <button className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-green">
                       <Share2 className="h-4 w-4" />
@@ -400,9 +344,13 @@ export default function Gallery() {
                   </div>
                   
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm text-muted-foreground">{selectedPhoto.date}</span>
-                    <span className="text-sm text-muted-foreground">•</span>
-                    <span className="text-sm text-uganda-green">{selectedPhoto.location}</span>
+                    <span className="text-sm text-muted-foreground">{new Date(selectedPhoto.date).toLocaleDateString()}</span>
+                    {selectedPhoto.location && (
+                      <>
+                        <span className="text-sm text-muted-foreground">•</span>
+                        <span className="text-sm text-uganda-green">{selectedPhoto.location}</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

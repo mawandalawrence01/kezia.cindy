@@ -1,0 +1,468 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for fans and community members
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  messages        FanMessage[]
+  votes           Vote[]
+  pollVotes       PollVote[]
+  quizScores      QuizScore[]
+  submissions     CompetitionSubmission[]
+  comments        Comment[]
+  registrations   EventRegistration[]
+  likes           Like[]
+
+  @@map("users")
+}
+
+// Queen's updates and posts
+model Update {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  type        UpdateType
+  location    String?
+  image       String?
+  publishedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  likes    Like[]
+  comments Comment[]
+
+  @@map("updates")
+}
+
+// Travel diaries
+model TravelDiary {
+  id          String   @id @default(cuid())
+  title       String
+  location    String
+  content     String
+  images      String[]
+  highlights  String[]
+  rating      Int      @default(5)
+  date        DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("travel_diaries")
+}
+
+// Cultural experiences
+model Experience {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  category    String
+  duration    String
+  participants Int
+  rating      Int      @default(5)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("experiences")
+}
+
+// Gallery photos
+model Photo {
+  id          String      @id @default(cuid())
+  title       String
+  description String
+  image       String
+  category    PhotoCategory
+  location    String?
+  date        DateTime    @default(now())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  votes    Vote[]
+  comments Comment[]
+
+  @@map("photos")
+}
+
+// Fan messages on the wall
+model FanMessage {
+  id        String   @id @default(cuid())
+  content   String
+  type      MessageType @default(MESSAGE)
+  image     String?
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes  Like[]
+  comments Comment[]
+
+  @@map("fan_messages")
+}
+
+// Polls for fan engagement
+model Poll {
+  id          String   @id @default(cuid())
+  question    String
+  description String?
+  endDate     DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  options PollOption[]
+  votes   PollVote[]
+
+  @@map("polls")
+}
+
+// Poll options
+model PollOption {
+  id      String @id @default(cuid())
+  text    String
+  pollId  String
+  votes   Int    @default(0)
+
+  // Relations
+  poll Poll @relation(fields: [pollId], references: [id], onDelete: Cascade)
+
+  @@map("poll_options")
+}
+
+// Poll votes
+model PollVote {
+  id       String @id @default(cuid())
+  userId   String
+  pollId   String
+  optionId String
+  createdAt DateTime @default(now())
+
+  // Relations
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  poll   Poll @relation(fields: [pollId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, pollId])
+  @@map("poll_votes")
+}
+
+// Quizzes
+model Quiz {
+  id          String     @id @default(cuid())
+  title       String
+  description String
+  questions   Int
+  difficulty  Difficulty
+  category    String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relations
+  scores QuizScore[]
+
+  @@map("quizzes")
+}
+
+// Quiz scores
+model QuizScore {
+  id       String @id @default(cuid())
+  userId   String
+  quizId   String
+  score    Int
+  completedAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, quizId])
+  @@map("quiz_scores")
+}
+
+// Tourism destinations
+model Destination {
+  id          String   @id @default(cuid())
+  name        String
+  region      String
+  type        DestinationType
+  description String
+  highlights  String[]
+  bestTime    String
+  duration    String
+  difficulty  Difficulty
+  rating      Float    @default(0)
+  coordinates Json?    // { x: number, y: number }
+  hasAudio    Boolean  @default(false)
+  has360      Boolean  @default(false)
+  image       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  stories Story[]
+
+  @@map("destinations")
+}
+
+// Narrated stories
+model Story {
+  id           String   @id @default(cuid())
+  title        String
+  destinationName String
+  duration     String
+  audioUrl     String?
+  transcript   String
+  destinationId String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  destination Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+
+  @@map("stories")
+}
+
+// Fashion outfits
+model Outfit {
+  id                  String      @id @default(cuid())
+  title               String
+  description         String
+  category            OutfitCategory
+  image               String
+  designer            String
+  occasion            String
+  culturalSignificance String
+  tags                String[]
+  location            String?
+  date                DateTime    @default(now())
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  // Relations
+  votes    Vote[]
+  comments Comment[]
+
+  @@map("outfits")
+}
+
+// Events
+model Event {
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  date        DateTime
+  time        String
+  location    String
+  type        EventType
+  status      EventStatus @default(UPCOMING)
+  attendees   Int       @default(0)
+  highlights  String[]
+  image       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  registrations EventRegistration[]
+
+  @@map("events")
+}
+
+// Event registrations
+model EventRegistration {
+  id      String @id @default(cuid())
+  userId  String
+  eventId String
+  createdAt DateTime @default(now())
+
+  // Relations
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+  @@map("event_registrations")
+}
+
+// Competitions
+model Competition {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  category    CompetitionCategory
+  endDate     DateTime
+  prize       String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  submissions CompetitionSubmission[]
+
+  @@map("competitions")
+}
+
+// Competition submissions
+model CompetitionSubmission {
+  id            String   @id @default(cuid())
+  userId        String
+  competitionId String
+  title         String
+  description   String?
+  image         String?
+  fileUrl       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  competition Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+
+  @@map("competition_submissions")
+}
+
+// Votes for photos and outfits
+model Vote {
+  id        String   @id @default(cuid())
+  userId    String
+  photoId   String?
+  outfitId  String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  photo  Photo?  @relation(fields: [photoId], references: [id], onDelete: Cascade)
+  outfit Outfit? @relation(fields: [outfitId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, photoId])
+  @@unique([userId, outfitId])
+  @@map("votes")
+}
+
+// Likes for updates and messages
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  updateId  String?
+  messageId String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  update  Update?     @relation(fields: [updateId], references: [id], onDelete: Cascade)
+  message FanMessage? @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, updateId])
+  @@unique([userId, messageId])
+  @@map("likes")
+}
+
+// Comments
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  userId    String
+  updateId  String?
+  photoId   String?
+  outfitId  String?
+  messageId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  update  Update?     @relation(fields: [updateId], references: [id], onDelete: Cascade)
+  photo   Photo?      @relation(fields: [photoId], references: [id], onDelete: Cascade)
+  outfit  Outfit?     @relation(fields: [outfitId], references: [id], onDelete: Cascade)
+  message FanMessage? @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+// Daily quotes
+model DailyQuote {
+  id        String   @id @default(cuid())
+  text      String
+  author    String?
+  date      DateTime @unique
+  createdAt DateTime @default(now())
+
+  @@map("daily_quotes")
+}
+
+// Enums
+enum UpdateType {
+  UPDATE
+  TRAVEL
+  EXPERIENCE
+}
+
+enum PhotoCategory {
+  NATURE
+  CULTURE
+  FASHION
+  EVENTS
+}
+
+enum MessageType {
+  MESSAGE
+  ART
+  PHOTO
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum DestinationType {
+  NATIONAL_PARK
+  WATERFALL
+  LAKE
+  CITY
+  CULTURAL_SITE
+}
+
+enum OutfitCategory {
+  TRADITIONAL
+  MODERN
+  FORMAL
+  CASUAL
+  CULTURAL
+}
+
+enum EventType {
+  PAGEANT
+  TOURISM
+  CULTURAL
+  COMPETITION
+}
+
+enum EventStatus {
+  UPCOMING
+  LIVE
+  COMPLETED
+}
+
+enum CompetitionCategory {
+  PHOTO
+  ART
+  POETRY
+  VIDEO
+}
