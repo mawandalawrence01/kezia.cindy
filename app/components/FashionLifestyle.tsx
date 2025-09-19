@@ -195,6 +195,23 @@ export default function FashionLifestyle() {
     console.log(`Voted for outfit ${outfitId}`);
   };
 
+  const handleLike = (outfit: Outfit) => {
+    // In a real app, this would make an API call to like/unlike
+    console.log(`Liked outfit: ${outfit.title}`);
+    
+    // Update local state to show immediate feedback
+    setOutfits(prevOutfits => 
+      prevOutfits.map(o => 
+        o.id === outfit.id 
+          ? { ...o, votes: (o.votes || 0) + 1, isVoted: true }
+          : o
+      )
+    );
+    
+    // Show user feedback
+    alert(`You liked "${outfit.title}"! ❤️`);
+  };
+
   const handleViewCollection = (collectionId: number) => {
     // Filter outfits by collection and show them
     const collection = virtualCloset.find(c => c.id === collectionId);
@@ -207,27 +224,63 @@ export default function FashionLifestyle() {
   };
 
   const handleShare = (outfit: Outfit) => {
-    if (navigator.share) {
-      navigator.share({
-        title: outfit.title,
-        text: outfit.description,
-        url: window.location.href
-      });
+    const shareData = {
+      title: `Check out this outfit: ${outfit.title}`,
+      text: outfit.description,
+      url: window.location.href
+    };
+
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      navigator.share(shareData)
+        .then(() => {
+          console.log('Successfully shared outfit');
+        })
+        .catch((error) => {
+          console.error('Error sharing:', error);
+          // Fallback to clipboard
+          fallbackShare(outfit);
+        });
     } else {
       // Fallback: copy to clipboard
-      navigator.clipboard.writeText(`${outfit.title} - ${window.location.href}`);
-      alert('Link copied to clipboard!');
+      fallbackShare(outfit);
+    }
+  };
+
+  const fallbackShare = (outfit: Outfit) => {
+    const shareText = `Check out this outfit: ${outfit.title}\n${outfit.description}\n${window.location.href}`;
+    
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(shareText)
+        .then(() => {
+          alert(`"${outfit.title}" link copied to clipboard! 📋`);
+        })
+        .catch(() => {
+          // Final fallback - show the text for manual copying
+          prompt('Copy this link to share:', shareText);
+        });
+    } else {
+      // Final fallback - show the text for manual copying
+      prompt('Copy this link to share:', shareText);
     }
   };
 
   const handleDownload = (outfit: Outfit) => {
-    // Create a download link for the outfit image
-    const link = document.createElement('a');
-    link.href = outfit.image || '/api/placeholder/400/600';
-    link.download = `${outfit.title.replace(/\s+/g, '_')}.jpg`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      // Create a download link for the outfit image
+      const link = document.createElement('a');
+      link.href = outfit.image || '/api/placeholder/400/600';
+      link.download = `${outfit.title.replace(/\s+/g, '_')}.jpg`;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Show user feedback
+      alert(`"${outfit.title}" download started! 📥`);
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert('Download failed. Please try again.');
+    }
   };
 
   const getCategoryColor = (category: string) => {
@@ -382,11 +435,15 @@ export default function FashionLifestyle() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleVote(outfit.id);
+                            handleLike(outfit);
                           }}
-                          className="flex items-center space-x-2 px-3 py-2 rounded-lg transition-all bg-muted text-muted-foreground hover:bg-uganda-red hover:text-background"
+                          className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all ${
+                            outfit.isVoted 
+                              ? 'bg-uganda-red text-background' 
+                              : 'bg-muted text-muted-foreground hover:bg-uganda-red hover:text-background'
+                          }`}
                         >
-                          <Heart className="h-4 w-4" />
+                          <Heart className={`h-4 w-4 ${outfit.isVoted ? 'fill-current' : ''}`} />
                           <span className="text-sm font-medium">{outfit.votes || 0}</span>
                         </button>
                           
