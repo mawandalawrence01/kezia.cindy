@@ -55,6 +55,10 @@ export default function TourismExplorer() {
   const [loading, setLoading] = useState(true);
   const [speechSynthesis, setSpeechSynthesis] = useState<SpeechSynthesis | null>(null);
   const [currentUtterance, setCurrentUtterance] = useState<SpeechSynthesisUtterance | null>(null);
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
+  const [speechRate, setSpeechRate] = useState(0.9);
+  const [speechPitch, setSpeechPitch] = useState(1.0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -80,12 +84,42 @@ export default function TourismExplorer() {
     fetchData();
   }, []);
 
-  // Initialize speech synthesis
+  // Initialize speech synthesis and load voices
   useEffect(() => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      setSpeechSynthesis(window.speechSynthesis);
+      const synth = window.speechSynthesis;
+      setSpeechSynthesis(synth);
+      
+      // Load voices
+      const loadVoices = () => {
+        const voices = synth.getVoices();
+        setAvailableVoices(voices);
+        
+        // Set default voice (prefer female voices)
+        if (voices.length > 0 && !selectedVoice) {
+          const femaleVoice = voices.find(voice => 
+            voice.name.toLowerCase().includes('female') || 
+            voice.name.toLowerCase().includes('woman') ||
+            voice.name.toLowerCase().includes('samantha') ||
+            voice.name.toLowerCase().includes('karen') ||
+            voice.name.toLowerCase().includes('susan') ||
+            voice.name.toLowerCase().includes('zira') ||
+            voice.name.toLowerCase().includes('hazel')
+          );
+          
+          setSelectedVoice(femaleVoice || voices[0]);
+        }
+      };
+      
+      // Load voices immediately if available
+      loadVoices();
+      
+      // Some browsers load voices asynchronously
+      if (synth.onvoiceschanged !== undefined) {
+        synth.onvoiceschanged = loadVoices;
+      }
     }
-  }, []);
+  }, [selectedVoice]);
 
   // Cleanup speech synthesis on unmount
   useEffect(() => {
@@ -149,22 +183,13 @@ export default function TourismExplorer() {
     const utterance = new SpeechSynthesisUtterance(story.transcript);
     
     // Configure speech settings
-    utterance.rate = 0.9; // Slightly slower for better comprehension
-    utterance.pitch = 1.0; // Normal pitch
+    utterance.rate = speechRate;
+    utterance.pitch = speechPitch;
     utterance.volume = isMuted ? 0 : 1.0;
     
-    // Try to use a female voice if available
-    const voices = speechSynthesis.getVoices();
-    const femaleVoice = voices.find(voice => 
-      voice.name.toLowerCase().includes('female') || 
-      voice.name.toLowerCase().includes('woman') ||
-      voice.name.toLowerCase().includes('samantha') ||
-      voice.name.toLowerCase().includes('karen') ||
-      voice.name.toLowerCase().includes('susan')
-    );
-    
-    if (femaleVoice) {
-      utterance.voice = femaleVoice;
+    // Use the selected voice
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
     }
 
     // Set up event handlers
@@ -226,8 +251,54 @@ export default function TourismExplorer() {
     setIsMuted(!isMuted);
   };
 
+  const handleVoiceChange = (voice: SpeechSynthesisVoice) => {
+    setSelectedVoice(voice);
+    
+    // If currently playing, restart with new voice
+    if (isPlaying && activeStory) {
+      handleStop();
+      setTimeout(() => {
+        startTextToSpeech(activeStory);
+      }, 100);
+    }
+  };
+
   return (
-    <section id="tourism" className="py-20 bg-gradient-to-br from-uganda-green/5 to-earth-brown/5">
+    <>
+      <style jsx>{`
+        .slider::-webkit-slider-thumb {
+          appearance: none;
+          height: 20px;
+          width: 20px;
+          border-radius: 50%;
+          background: #FCD34D;
+          cursor: pointer;
+          border: 2px solid #1F2937;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .slider::-moz-range-thumb {
+          height: 20px;
+          width: 20px;
+          border-radius: 50%;
+          background: #FCD34D;
+          cursor: pointer;
+          border: 2px solid #1F2937;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .slider::-webkit-slider-track {
+          background: #E5E7EB;
+          border-radius: 8px;
+        }
+        
+        .slider::-moz-range-track {
+          background: #E5E7EB;
+          border-radius: 8px;
+          height: 8px;
+        }
+      `}</style>
+      <section id="tourism" className="py-20 bg-gradient-to-br from-uganda-green/5 to-earth-brown/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -491,6 +562,97 @@ export default function TourismExplorer() {
                   <p className="text-foreground">{activeStory.transcript}</p>
                 </div>
 
+                {/* Voice Selector */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-foreground">
+                      Voice Selection
+                    </label>
+                    <button
+                      onClick={() => {
+                        if (selectedVoice && speechSynthesis) {
+                          const testUtterance = new SpeechSynthesisUtterance("Hello, this is a voice preview.");
+                          testUtterance.voice = selectedVoice;
+                          testUtterance.rate = speechRate;
+                          testUtterance.pitch = speechPitch;
+                          speechSynthesis.speak(testUtterance);
+                        }
+                      }}
+                      className="text-xs bg-uganda-green text-background px-2 py-1 rounded hover:bg-uganda-green/80 transition-colors"
+                      disabled={!selectedVoice}
+                    >
+                      Test Voice
+                    </button>
+                  </div>
+                  <select
+                    value={selectedVoice?.name || ''}
+                    onChange={(e) => {
+                      const voice = availableVoices.find(v => v.name === e.target.value);
+                      if (voice) handleVoiceChange(voice);
+                    }}
+                    className="w-full p-3 border border-muted rounded-lg bg-background text-foreground focus:border-uganda-gold focus:ring-2 focus:ring-uganda-gold/20 transition-all"
+                    disabled={!availableVoices.length}
+                  >
+                    {availableVoices.length === 0 ? (
+                      <option value="">Loading voices...</option>
+                    ) : (
+                      availableVoices.map((voice) => (
+                        <option key={voice.name} value={voice.name}>
+                          {voice.name} {voice.lang && `(${voice.lang})`}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                  {availableVoices.length > 0 && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {availableVoices.length} voice{availableVoices.length !== 1 ? 's' : ''} available
+                    </p>
+                  )}
+                </div>
+
+                {/* Speech Settings */}
+                <div className="mb-6 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Speech Rate: {speechRate.toFixed(1)}x
+                    </label>
+                    <input
+                      type="range"
+                      min="0.5"
+                      max="2.0"
+                      step="0.1"
+                      value={speechRate}
+                      onChange={(e) => setSpeechRate(parseFloat(e.target.value))}
+                      className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer slider"
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                      <span>Slow (0.5x)</span>
+                      <span>Normal (1.0x)</span>
+                      <span>Fast (2.0x)</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Voice Pitch: {speechPitch.toFixed(1)}
+                    </label>
+                    <input
+                      type="range"
+                      min="0.5"
+                      max="2.0"
+                      step="0.1"
+                      value={speechPitch}
+                      onChange={(e) => setSpeechPitch(parseFloat(e.target.value))}
+                      className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer slider"
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                      <span>Low (0.5)</span>
+                      <span>Normal (1.0)</span>
+                      <span>High (2.0)</span>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <button
@@ -528,5 +690,6 @@ export default function TourismExplorer() {
         </AnimatePresence>
       </div>
     </section>
+    </>
   );
 }
