@@ -22,6 +22,7 @@ import TourismExplorer from "./components/TourismExplorer";
 import FashionLifestyle from "./components/FashionLifestyle";
 import Events from "./components/Events";
 import AIChatbot from "./components/AIChatbot";
+import UserAuth from "./components/UserAuth";
 
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -77,7 +78,7 @@ export default function Home() {
             </div>
             
             {/* Desktop Navigation */}
-            <div className="hidden md:flex space-x-8">
+            <div className="hidden md:flex items-center space-x-8">
               {navigation.map((item) => (
                 <a
                   key={item.name}
@@ -87,6 +88,7 @@ export default function Home() {
                   {item.name}
                 </a>
               ))}
+              <UserAuth />
             </div>
 
             {/* Mobile menu button */}
@@ -119,6 +121,9 @@ export default function Home() {
                     {item.name}
                   </a>
                 ))}
+                <div className="px-3 py-2">
+                  <UserAuth />
+                </div>
               </div>
             </motion.div>
           )}

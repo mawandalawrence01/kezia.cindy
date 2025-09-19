@@ -13,7 +13,7 @@ async function main() {
       create: {
         email: 'sarah@example.com',
         name: 'Sarah M.',
-        avatar: '/api/placeholder/40/40',
+        image: '/api/placeholder/40/40',
       },
     }),
     prisma.user.upsert({
@@ -22,7 +22,7 @@ async function main() {
       create: {
         email: 'david@example.com',
         name: 'David K.',
-        avatar: '/api/placeholder/40/40',
+        image: '/api/placeholder/40/40',
       },
     }),
     prisma.user.upsert({
@@ -31,7 +31,7 @@ async function main() {
       create: {
         email: 'grace@example.com',
         name: 'Grace L.',
-        avatar: '/api/placeholder/40/40',
+        image: '/api/placeholder/40/40',
       },
     }),
   ])

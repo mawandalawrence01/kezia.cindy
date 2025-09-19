@@ -13,7 +13,7 @@ export async function GET() {
             user: {
               select: {
                 name: true,
-                avatar: true,
+                image: true,
               },
             },
           },
