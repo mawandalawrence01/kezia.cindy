@@ -195,6 +195,41 @@ export default function FashionLifestyle() {
     console.log(`Voted for outfit ${outfitId}`);
   };
 
+  const handleViewCollection = (collectionId: number) => {
+    // Filter outfits by collection and show them
+    const collection = virtualCloset.find(c => c.id === collectionId);
+    if (collection) {
+      setActiveTab('closet');
+      setActiveCategory('all');
+      // You could also set a specific filter for this collection
+      console.log(`Viewing collection: ${collection.name}`);
+    }
+  };
+
+  const handleShare = (outfit: Outfit) => {
+    if (navigator.share) {
+      navigator.share({
+        title: outfit.title,
+        text: outfit.description,
+        url: window.location.href
+      });
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(`${outfit.title} - ${window.location.href}`);
+      alert('Link copied to clipboard!');
+    }
+  };
+
+  const handleDownload = (outfit: Outfit) => {
+    // Create a download link for the outfit image
+    const link = document.createElement('a');
+    link.href = outfit.image || '/api/placeholder/400/600';
+    link.download = `${outfit.title.replace(/\s+/g, '_')}.jpg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const getCategoryColor = (category: string) => {
     switch (category) {
       case 'traditional': return 'from-uganda-green to-deep-green';
@@ -356,10 +391,22 @@ export default function FashionLifestyle() {
                         </button>
                           
                           <div className="flex items-center space-x-2">
-                            <button className="p-2 text-muted-foreground hover:text-uganda-green transition-colors">
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleShare(outfit);
+                              }}
+                              className="p-2 text-muted-foreground hover:text-uganda-green transition-colors"
+                            >
                               <Share2 className="h-4 w-4" />
                             </button>
-                            <button className="p-2 text-muted-foreground hover:text-uganda-gold transition-colors">
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDownload(outfit);
+                              }}
+                              className="p-2 text-muted-foreground hover:text-uganda-gold transition-colors"
+                            >
                               <Download className="h-4 w-4" />
                             </button>
                           </div>
@@ -480,7 +527,10 @@ export default function FashionLifestyle() {
                       ))}
                     </div>
 
-                    <button className="w-full bg-gradient-to-r from-uganda-gold to-warm-gold text-uganda-black py-2 px-4 rounded-lg font-semibold hover:shadow-md transition-all">
+                    <button 
+                      onClick={() => handleViewCollection(collection.id)}
+                      className="w-full bg-gradient-to-r from-uganda-gold to-warm-gold text-uganda-black py-2 px-4 rounded-lg font-semibold hover:shadow-md transition-all"
+                    >
                       View Collection
                     </button>
                   </motion.div>
@@ -560,7 +610,10 @@ export default function FashionLifestyle() {
                       <Heart className="h-4 w-4 fill-current" />
                       <span>{selectedOutfit.votes} votes</span>
                     </button>
-                    <button className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-green">
+                    <button 
+                      onClick={() => handleShare(selectedOutfit)}
+                      className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-green"
+                    >
                       <Share2 className="h-4 w-4" />
                       <span>Share</span>
                     </button>

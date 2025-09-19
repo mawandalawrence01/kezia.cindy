@@ -108,6 +108,44 @@ export default function QueensCorner() {
     { id: 'experiences', label: 'Experiences', icon: Star }
   ];
 
+  const handleLike = (updateId: number) => {
+    // In a real app, this would make an API call
+    console.log(`Liked update ${updateId}`);
+    // You could also update the local state to show immediate feedback
+  };
+
+  const handleComment = (updateId: number) => {
+    // In a real app, this would open a comment modal or navigate to a comment section
+    console.log(`Comment on update ${updateId}`);
+    alert('Comment functionality would open here!');
+  };
+
+  const handleShare = (update: Update) => {
+    if (navigator.share) {
+      navigator.share({
+        title: update.title,
+        text: update.content,
+        url: window.location.href
+      });
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(`${update.title} - ${window.location.href}`);
+      alert('Link copied to clipboard!');
+    }
+  };
+
+  const handleReadDiary = (diaryId: number) => {
+    // In a real app, this would navigate to the full diary page
+    console.log(`Reading diary ${diaryId}`);
+    alert('Full diary would open here!');
+  };
+
+  const handleLearnMore = (experienceId: number) => {
+    // In a real app, this would navigate to the experience details page
+    console.log(`Learning more about experience ${experienceId}`);
+    alert('Experience details would open here!');
+  };
+
   return (
     <section id="queens-corner" className="py-20 bg-gradient-to-br from-cream/30 to-warm-gold/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -193,15 +231,24 @@ export default function QueensCorner() {
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-6">
-                        <button className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-red transition-colors">
+                        <button 
+                          onClick={() => handleLike(update.id)}
+                          className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-red transition-colors"
+                        >
                           <Heart className="h-5 w-5" />
                           <span>{update.likes || 0}</span>
                         </button>
-                        <button className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-green transition-colors">
+                        <button 
+                          onClick={() => handleComment(update.id)}
+                          className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-green transition-colors"
+                        >
                           <MessageCircle className="h-5 w-5" />
                           <span>{update.comments || 0}</span>
                         </button>
-                        <button className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-gold transition-colors">
+                        <button 
+                          onClick={() => handleShare(update)}
+                          className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-gold transition-colors"
+                        >
                           <Share2 className="h-5 w-5" />
                           <span>Share</span>
                         </button>
@@ -270,7 +317,10 @@ export default function QueensCorner() {
                       </ul>
                     </div>
 
-                    <button className="w-full bg-gradient-to-r from-uganda-gold to-warm-gold text-uganda-black py-2 px-4 rounded-lg font-semibold hover:shadow-md transition-all">
+                    <button 
+                      onClick={() => handleReadDiary(diary.id)}
+                      className="w-full bg-gradient-to-r from-uganda-gold to-warm-gold text-uganda-black py-2 px-4 rounded-lg font-semibold hover:shadow-md transition-all"
+                    >
                       Read Full Diary
                     </button>
                   </div>
@@ -320,7 +370,10 @@ export default function QueensCorner() {
                     </div>
                   </div>
 
-                  <button className="w-full border border-uganda-green text-uganda-green py-2 px-4 rounded-lg font-semibold hover:bg-uganda-green hover:text-background transition-all">
+                  <button 
+                    onClick={() => handleLearnMore(experience.id)}
+                    className="w-full border border-uganda-green text-uganda-green py-2 px-4 rounded-lg font-semibold hover:bg-uganda-green hover:text-background transition-all"
+                  >
                     Learn More
                   </button>
                 </motion.div>

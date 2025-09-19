@@ -108,6 +108,42 @@ export default function Gallery() {
     console.log(`Voted for photo ${photoId}`);
   };
 
+  const handleShare = (photo: Photo) => {
+    if (navigator.share) {
+      navigator.share({
+        title: photo.title,
+        text: photo.description,
+        url: window.location.href
+      });
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(`${photo.title} - ${window.location.href}`);
+      alert('Link copied to clipboard!');
+    }
+  };
+
+  const handleDownload = (photo: Photo) => {
+    // Create a download link for the photo
+    const link = document.createElement('a');
+    link.href = photo.image || '/api/placeholder/400/600';
+    link.download = `${photo.title.replace(/\s+/g, '_')}.jpg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleViewPhoto = (photoId: number) => {
+    // In a real app, this would open the photo in a modal or navigate to a photo page
+    console.log(`Viewing photo ${photoId}`);
+    alert('Photo viewer would open here!');
+  };
+
+  const handleLoadMore = () => {
+    // In a real app, this would load more photos from the API
+    console.log('Loading more photos...');
+    alert('More photos would load here!');
+  };
+
   return (
     <section id="gallery" className="py-20 bg-gradient-to-br from-uganda-green/5 to-uganda-gold/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -167,7 +203,10 @@ export default function Gallery() {
                       <Heart className="h-5 w-5 text-uganda-red" />
                       <span className="font-semibold text-foreground">{pick.votes} votes</span>
                     </div>
-                    <button className="bg-gradient-to-r from-uganda-gold to-warm-gold text-uganda-black px-4 py-2 rounded-lg font-semibold hover:shadow-md transition-all">
+                    <button 
+                      onClick={() => handleViewPhoto(pick.id)}
+                      className="bg-gradient-to-r from-uganda-gold to-warm-gold text-uganda-black px-4 py-2 rounded-lg font-semibold hover:shadow-md transition-all"
+                    >
                       View Photo
                     </button>
                   </div>
@@ -275,10 +314,22 @@ export default function Gallery() {
                     </button>
                     
                     <div className="flex items-center space-x-2">
-                      <button className="p-2 text-muted-foreground hover:text-uganda-green transition-colors">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleShare(photo);
+                        }}
+                        className="p-2 text-muted-foreground hover:text-uganda-green transition-colors"
+                      >
                         <Share2 className="h-4 w-4" />
                       </button>
-                      <button className="p-2 text-muted-foreground hover:text-uganda-gold transition-colors">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDownload(photo);
+                        }}
+                        className="p-2 text-muted-foreground hover:text-uganda-gold transition-colors"
+                      >
                         <Download className="h-4 w-4" />
                       </button>
                     </div>
@@ -291,7 +342,10 @@ export default function Gallery() {
 
         {/* Load More Button */}
         <div className="text-center mt-12">
-          <button className="bg-gradient-to-r from-uganda-gold to-warm-gold text-uganda-black px-8 py-3 rounded-full font-semibold hover:shadow-lg transition-all">
+          <button 
+            onClick={handleLoadMore}
+            className="bg-gradient-to-r from-uganda-gold to-warm-gold text-uganda-black px-8 py-3 rounded-full font-semibold hover:shadow-lg transition-all"
+          >
             Load More Photos
           </button>
         </div>
@@ -337,7 +391,10 @@ export default function Gallery() {
                       <Heart className="h-4 w-4 fill-current" />
                       <span>{selectedPhoto.votes || 0} votes</span>
                     </button>
-                    <button className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-green">
+                    <button 
+                      onClick={() => handleShare(selectedPhoto)}
+                      className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-green"
+                    >
                       <Share2 className="h-4 w-4" />
                       <span>Share</span>
                     </button>
