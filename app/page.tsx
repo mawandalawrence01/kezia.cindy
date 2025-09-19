@@ -88,17 +88,21 @@ export default function Home() {
             </div>
             
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
-              {navigation.map((item) => (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  className="text-foreground hover:text-uganda-gold transition-colors font-medium"
-                >
-                  {item.name}
-                </a>
-              ))}
-              <UserAuth />
+            <div className="hidden md:flex items-center space-x-6">
+              <div className="flex items-center space-x-6">
+                {navigation.map((item) => (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    className="text-foreground hover:text-uganda-gold transition-colors font-medium whitespace-nowrap"
+                  >
+                    {item.name}
+                  </a>
+                ))}
+              </div>
+              <div className="flex-shrink-0">
+                <UserAuth />
+              </div>
             </div>
 
             {/* Mobile menu button */}
@@ -131,7 +135,7 @@ export default function Home() {
                     {item.name}
                   </a>
                 ))}
-                <div className="px-3 py-2">
+                <div className="px-3 py-2 border-t border-uganda-gold/20">
                   <UserAuth />
                 </div>
               </div>
