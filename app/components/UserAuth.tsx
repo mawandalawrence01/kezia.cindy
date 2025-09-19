@@ -5,19 +5,29 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, LogOut, Crown } from "lucide-react";
 import GoogleOneTap from "./GoogleOneTap";
+import GoogleSignIn from "./GoogleSignIn";
 
 export default function UserAuth() {
   const { data: session, status } = useSession();
   const [showOneTap, setShowOneTap] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleOneTapSuccess = () => {
     console.log('Google One Tap login successful');
+    setIsLoading(false);
     setShowOneTap(false);
   };
 
   const handleOneTapError = (error: string) => {
     console.error('Google One Tap error:', error);
+    setIsLoading(false);
     setShowOneTap(false);
+  };
+
+  const handleShowOneTap = () => {
+    if (isLoading) return;
+    setIsLoading(true);
+    setShowOneTap(true);
   };
 
   if (status === "loading") {
@@ -68,11 +78,12 @@ export default function UserAuth() {
   return (
     <div className="flex items-center space-x-3">
       <button
-        onClick={() => setShowOneTap(true)}
-        className="flex items-center space-x-2 bg-gradient-to-r from-uganda-gold to-warm-gold text-uganda-black px-4 py-2 rounded-lg font-semibold hover:shadow-md transition-all"
+        onClick={handleShowOneTap}
+        disabled={isLoading}
+        className="flex items-center space-x-2 bg-gradient-to-r from-uganda-gold to-warm-gold text-uganda-black px-4 py-2 rounded-lg font-semibold hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <Crown className="h-4 w-4" />
-        <span>Join The Queen&apos;s Community</span>
+        <span>{isLoading ? 'Loading...' : 'Join The Queen&apos;s Community'}</span>
       </button>
 
       <AnimatePresence>
@@ -100,16 +111,41 @@ export default function UserAuth() {
                 </p>
               </div>
               
-              <GoogleOneTap
-                onSuccess={handleOneTapSuccess}
-                onError={handleOneTapError}
-                autoSelect={false}
-                cancelOnTapOutside={true}
-              />
+              {isLoading && (
+                <div className="text-center mb-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-uganda-gold mx-auto"></div>
+                  <p className="text-sm text-muted-foreground mt-2">Initializing Google One Tap...</p>
+                </div>
+              )}
+              
+              <div className="space-y-4">
+                <GoogleOneTap
+                  onSuccess={handleOneTapSuccess}
+                  onError={handleOneTapError}
+                  autoSelect={false}
+                  cancelOnTapOutside={true}
+                />
+                
+                <div className="text-center">
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-muted" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">Or</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <GoogleSignIn />
+              </div>
               
               <div className="mt-4 text-center">
                 <button
-                  onClick={() => setShowOneTap(false)}
+                  onClick={() => {
+                    setShowOneTap(false);
+                    setIsLoading(false);
+                  }}
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Cancel
