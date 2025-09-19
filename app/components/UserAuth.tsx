@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { User, LogOut, Crown } from "lucide-react";
 import GoogleOneTap from "./GoogleOneTap";
 import GoogleSignIn from "./GoogleSignIn";
+import SimpleGoogleAuth from "./SimpleGoogleAuth";
 
 export default function UserAuth() {
   const { data: session, status } = useSession();
@@ -24,11 +25,6 @@ export default function UserAuth() {
     setShowOneTap(false);
   };
 
-  const handleShowOneTap = () => {
-    if (isLoading) return;
-    setIsLoading(true);
-    setShowOneTap(true);
-  };
 
   if (status === "loading") {
     return (
@@ -77,14 +73,7 @@ export default function UserAuth() {
 
   return (
     <div className="flex items-center space-x-3">
-      <button
-        onClick={handleShowOneTap}
-        disabled={isLoading}
-        className="flex items-center space-x-2 bg-gradient-to-r from-uganda-gold to-warm-gold text-uganda-black px-4 py-2 rounded-lg font-semibold hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <Crown className="h-4 w-4" />
-        <span>{isLoading ? 'Loading...' : 'Join The Queen&apos;s Community'}</span>
-      </button>
+      <SimpleGoogleAuth />
 
       <AnimatePresence>
         {showOneTap && (
@@ -119,12 +108,7 @@ export default function UserAuth() {
               )}
               
               <div className="space-y-4">
-                <GoogleOneTap
-                  onSuccess={handleOneTapSuccess}
-                  onError={handleOneTapError}
-                  autoSelect={false}
-                  cancelOnTapOutside={true}
-                />
+                <GoogleSignIn />
                 
                 <div className="text-center">
                   <div className="relative">
@@ -132,12 +116,17 @@ export default function UserAuth() {
                       <div className="w-full border-t border-muted" />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">Or</span>
+                      <span className="bg-background px-2 text-muted-foreground">Or try One Tap</span>
                     </div>
                   </div>
                 </div>
                 
-                <GoogleSignIn />
+                <GoogleOneTap
+                  onSuccess={handleOneTapSuccess}
+                  onError={handleOneTapError}
+                  autoSelect={false}
+                  cancelOnTapOutside={true}
+                />
               </div>
               
               <div className="mt-4 text-center">

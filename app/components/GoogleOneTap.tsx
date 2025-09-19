@@ -16,8 +16,9 @@ declare global {
             context?: string;
             ux_mode?: string;
             itp_support?: boolean;
+            use_fedcm_for_prompt?: boolean;
           }) => void;
-          prompt: (callback?: (notification: { isNotDisplayed: () => boolean; isSkippedMoment: () => boolean }) => void) => void;
+          prompt: (callback?: (notification: unknown) => void) => void;
           cancel: () => void;
           disableAutoSelect: () => void;
         };
@@ -90,17 +91,12 @@ export default function GoogleOneTap({
             cancel_on_tap_outside: cancelOnTapOutside,
             context: 'signin',
             ux_mode: 'popup',
-            itp_support: false, // Disable ITP support to avoid FedCM issues
+            itp_support: false,
+            use_fedcm_for_prompt: true, // Enable FedCM to avoid deprecated method warnings
           });
 
-          // Only prompt once
-          window.google.accounts.id.prompt((notification) => {
-            if (notification.isNotDisplayed()) {
-              console.log('Google One Tap was not displayed');
-            } else if (notification.isSkippedMoment()) {
-              console.log('Google One Tap was skipped');
-            }
-          });
+          // Prompt without using deprecated methods
+          window.google.accounts.id.prompt();
 
           isInitialized.current = true;
         } catch (error) {
