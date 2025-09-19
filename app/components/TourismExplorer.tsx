@@ -53,6 +53,8 @@ export default function TourismExplorer() {
   const [destinations, setDestinations] = useState<Destination[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
+  const [speechSynthesis, setSpeechSynthesis] = useState<SpeechSynthesis | null>(null);
+  const [currentUtterance, setCurrentUtterance] = useState<SpeechSynthesisUtterance | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -77,6 +79,22 @@ export default function TourismExplorer() {
 
     fetchData();
   }, []);
+
+  // Initialize speech synthesis
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      setSpeechSynthesis(window.speechSynthesis);
+    }
+  }, []);
+
+  // Cleanup speech synthesis on unmount
+  useEffect(() => {
+    return () => {
+      if (currentUtterance) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [currentUtterance]);
 
   if (loading) {
     return (
@@ -115,9 +133,97 @@ export default function TourismExplorer() {
 
   const handlePlayStory = (story: Story) => {
     setActiveStory(story);
-    setIsPlaying(true);
-    // In a real app, this would start audio playback
-    console.log('Playing story:', story.title);
+    startTextToSpeech(story);
+  };
+
+  const startTextToSpeech = (story: Story) => {
+    if (!speechSynthesis) {
+      alert('Text-to-speech is not supported in your browser. Please try a modern browser like Chrome, Firefox, or Safari.');
+      return;
+    }
+
+    // Stop any current speech
+    speechSynthesis.cancel();
+
+    // Create new utterance
+    const utterance = new SpeechSynthesisUtterance(story.transcript);
+    
+    // Configure speech settings
+    utterance.rate = 0.9; // Slightly slower for better comprehension
+    utterance.pitch = 1.0; // Normal pitch
+    utterance.volume = isMuted ? 0 : 1.0;
+    
+    // Try to use a female voice if available
+    const voices = speechSynthesis.getVoices();
+    const femaleVoice = voices.find(voice => 
+      voice.name.toLowerCase().includes('female') || 
+      voice.name.toLowerCase().includes('woman') ||
+      voice.name.toLowerCase().includes('samantha') ||
+      voice.name.toLowerCase().includes('karen') ||
+      voice.name.toLowerCase().includes('susan')
+    );
+    
+    if (femaleVoice) {
+      utterance.voice = femaleVoice;
+    }
+
+    // Set up event handlers
+    utterance.onstart = () => {
+      setIsPlaying(true);
+      console.log('Started reading story:', story.title);
+    };
+
+    utterance.onend = () => {
+      setIsPlaying(false);
+      setCurrentUtterance(null);
+      console.log('Finished reading story:', story.title);
+    };
+
+    utterance.onerror = (event) => {
+      console.error('Speech synthesis error:', event);
+      setIsPlaying(false);
+      setCurrentUtterance(null);
+      alert('Sorry, there was an error reading the story. Please try again.');
+    };
+
+    utterance.onpause = () => {
+      setIsPlaying(false);
+    };
+
+    utterance.onresume = () => {
+      setIsPlaying(true);
+    };
+
+    // Store current utterance for control
+    setCurrentUtterance(utterance);
+    
+    // Start speaking
+    speechSynthesis.speak(utterance);
+  };
+
+  const handlePlayPause = () => {
+    if (!speechSynthesis || !currentUtterance) return;
+
+    if (isPlaying) {
+      speechSynthesis.pause();
+    } else {
+      speechSynthesis.resume();
+    }
+  };
+
+  const handleStop = () => {
+    if (speechSynthesis) {
+      speechSynthesis.cancel();
+      setIsPlaying(false);
+      setCurrentUtterance(null);
+    }
+  };
+
+  const handleMuteToggle = () => {
+    if (currentUtterance) {
+      currentUtterance.volume = isMuted ? 1.0 : 0;
+    }
+    setIsMuted(!isMuted);
   };
 
   return (
@@ -325,10 +431,20 @@ export default function TourismExplorer() {
                     
                     <button
                       onClick={() => handlePlayStory(story)}
-                      className="flex items-center space-x-2 text-uganda-gold hover:text-warm-gold transition-colors"
+                      className={`flex items-center space-x-2 transition-colors ${
+                        activeStory?.id === story.id && isPlaying
+                          ? 'text-uganda-red'
+                          : 'text-uganda-gold hover:text-warm-gold'
+                      }`}
                     >
-                      <Play className="h-4 w-4" />
-                      <span className="text-sm font-medium">Play Story</span>
+                      {activeStory?.id === story.id && isPlaying ? (
+                        <Pause className="h-4 w-4" />
+                      ) : (
+                        <Play className="h-4 w-4" />
+                      )}
+                      <span className="text-sm font-medium">
+                        {activeStory?.id === story.id && isPlaying ? 'Reading...' : 'Play Story'}
+                      </span>
                     </button>
                   </motion.div>
                 ))}
@@ -345,7 +461,10 @@ export default function TourismExplorer() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
-              onClick={() => setActiveStory(null)}
+              onClick={() => {
+                handleStop();
+                setActiveStory(null);
+              }}
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
@@ -357,7 +476,10 @@ export default function TourismExplorer() {
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-xl font-bold text-foreground">{activeStory.title}</h3>
                   <button
-                    onClick={() => setActiveStory(null)}
+                    onClick={() => {
+                      handleStop();
+                      setActiveStory(null);
+                    }}
                     className="text-muted-foreground hover:text-foreground"
                   >
                     <X className="h-6 w-6" />
@@ -372,22 +494,32 @@ export default function TourismExplorer() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <button
-                      onClick={() => setIsPlaying(!isPlaying)}
+                      onClick={handlePlayPause}
                       className="w-12 h-12 bg-gradient-to-r from-uganda-gold to-warm-gold rounded-full flex items-center justify-center hover:shadow-md transition-all"
+                      disabled={!currentUtterance}
                     >
                       {isPlaying ? <Pause className="h-6 w-6 text-uganda-black" /> : <Play className="h-6 w-6 text-uganda-black" />}
                     </button>
                     
                     <button
-                      onClick={() => setIsMuted(!isMuted)}
+                      onClick={handleStop}
+                      className="w-10 h-10 bg-uganda-red text-background rounded-full flex items-center justify-center hover:shadow-md transition-all"
+                      disabled={!currentUtterance}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                    
+                    <button
+                      onClick={handleMuteToggle}
                       className="p-2 text-muted-foreground hover:text-uganda-gold transition-colors"
+                      disabled={!currentUtterance}
                     >
                       {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
                     </button>
                   </div>
 
                   <div className="text-sm text-muted-foreground">
-                    Duration: {activeStory.duration}
+                    {isPlaying ? 'Reading...' : 'Ready to read'} • Duration: {activeStory.duration}
                   </div>
                 </div>
               </motion.div>
