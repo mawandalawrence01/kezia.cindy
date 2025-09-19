@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { 
   LayoutDashboard, 
   Users, 
@@ -46,27 +48,21 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check authentication status
-    const authStatus = localStorage.getItem("adminAuth");
-    if (authStatus === "true") {
-      setIsAuthenticated(true);
-    } else {
-      window.location.href = "/admin/login";
+    if (status === "unauthenticated") {
+      router.push("/admin/login");
     }
-    setLoading(false);
-  }, []);
+  }, [status, router]);
 
   const handleLogout = () => {
-    localStorage.removeItem("adminAuth");
-    window.location.href = "/admin/login";
+    signOut({ callbackUrl: "/admin/login" });
   };
 
-  if (loading) {
+  if (status === "loading") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-cream/30 to-warm-gold/20 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-uganda-gold"></div>
@@ -74,7 +70,7 @@ export default function AdminLayout({
     );
   }
 
-  if (!isAuthenticated) {
+  if (status === "unauthenticated") {
     return null;
   }
 
@@ -145,7 +141,7 @@ export default function AdminLayout({
 
             <div className="flex items-center space-x-4">
               <div className="text-sm text-muted-foreground">
-                Welcome back, Admin
+                Welcome back, {session?.user?.name || "Admin"}
               </div>
               <div className="w-8 h-8 bg-gradient-to-r from-uganda-gold to-warm-gold rounded-full flex items-center justify-center">
                 <Crown className="h-4 w-4 text-uganda-black" />

@@ -1,7 +1,6 @@
 import { NextAuthOptions } from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
-import { PrismaAdapter } from "@auth/prisma-adapter"
-import { prisma } from "./prisma"
+import CredentialsProvider from "next-auth/providers/credentials"
 
 declare module "next-auth" {
   interface Session {
@@ -15,17 +14,40 @@ declare module "next-auth" {
 }
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
+
+        // Admin credentials check
+        if (credentials.email === "kezia.cindy@gmail.com" && credentials.password === "geniusmind") {
+          return {
+            id: "admin-user-id",
+            email: "kezia.cindy@gmail.com",
+            name: "Admin User",
+            image: null,
+          };
+        }
+
+        return null;
+      }
     })
   ],
   callbacks: {
-    async session({ session, user }) {
-      if (session.user && user) {
-        session.user.id = user.id
+    async session({ session, token }) {
+      if (session.user && token) {
+        session.user.id = token.id as string
       }
       return session
     },
@@ -37,10 +59,11 @@ export const authOptions: NextAuthOptions = {
     }
   },
   pages: {
-    signIn: '/auth/signin',
-    error: '/auth/error',
+    signIn: '/admin/login',
+    error: '/admin/login',
   },
   session: {
-    strategy: "database"
-  }
+    strategy: "jwt"
+  },
+  secret: process.env.NEXTAUTH_SECRET,
 }

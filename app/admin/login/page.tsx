@@ -3,10 +3,13 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Crown, Lock, User, Eye, EyeOff } from "lucide-react";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function AdminLoginPage() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
-    username: "",
+    email: "",
     password: ""
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -19,16 +22,19 @@ export default function AdminLoginPage() {
     setError("");
 
     try {
-      // Simple authentication for demo purposes
-      if (formData.username === "admin" && formData.password === "admin123") {
-        // Store admin session (in a real app, use proper authentication)
-        localStorage.setItem("adminAuth", "true");
-        window.location.href = "/admin";
-      } else {
-        setError("Invalid username or password");
+      const result = await signIn("credentials", {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError("Invalid email or password");
+      } else if (result?.ok) {
+        router.push("/admin");
       }
-      } catch {
-        setError("Login failed. Please try again.");
+    } catch {
+      setError("Login failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -69,20 +75,20 @@ export default function AdminLoginPage() {
             )}
 
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-foreground mb-2">
-                Username
+              <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
+                Email
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
-                  type="text"
-                  id="username"
-                  name="username"
-                  value={formData.username}
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
                   onChange={handleChange}
                   required
                   className="w-full pl-10 pr-3 py-2 border border-muted rounded-lg focus:ring-2 focus:ring-uganda-gold focus:border-transparent"
-                  placeholder="Enter username"
+                  placeholder="Enter email"
                 />
               </div>
             </div>
@@ -129,12 +135,12 @@ export default function AdminLoginPage() {
             </button>
           </form>
 
-          {/* Demo Credentials */}
+          {/* Admin Credentials */}
           <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-            <h3 className="text-sm font-medium text-foreground mb-2">Demo Credentials:</h3>
+            <h3 className="text-sm font-medium text-foreground mb-2">Admin Credentials:</h3>
             <div className="text-xs text-muted-foreground space-y-1">
-              <div>Username: <code className="bg-background px-1 rounded">admin</code></div>
-              <div>Password: <code className="bg-background px-1 rounded">admin123</code></div>
+              <div>Email: <code className="bg-background px-1 rounded">kezia.cindy@gmail.com</code></div>
+              <div>Password: <code className="bg-background px-1 rounded">geniusmind</code></div>
             </div>
           </div>
         </div>
