@@ -1,102 +1,279 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Crown, 
+  Heart, 
+  MapPin, 
+  Camera, 
+  Users, 
+  Calendar,
+  Star,
+  ChevronDown,
+  Menu,
+  X,
+  Instagram,
+  Facebook,
+  Twitter,
+  Youtube
+} from "lucide-react";
+import QueensCorner from "./components/QueensCorner";
+import Gallery from "./components/Gallery";
+import FanCommunity from "./components/FanCommunity";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [currentQuote, setCurrentQuote] = useState(0);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const quotes = [
+    "The Pearl of Africa awaits your discovery",
+    "Beauty is found in the heart of Uganda",
+    "Every journey begins with a single step",
+    "Culture is the soul of a nation"
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentQuote((prev) => (prev + 1) % quotes.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const navigation = [
+    { name: "Queen's Corner", href: "#queens-corner" },
+    { name: "Gallery", href: "#gallery" },
+    { name: "Fan Community", href: "#community" },
+    { name: "Tourism Explorer", href: "#tourism" },
+    { name: "Fashion", href: "#fashion" },
+    { name: "Events", href: "#events" },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-cream via-background to-warm-gold">
+      {/* Navigation */}
+      <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-uganda-gold/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-2">
+              <Crown className="h-8 w-8 text-uganda-gold" />
+              <span className="text-xl font-bold text-uganda-green">Miss Tourism Uganda</span>
+            </div>
+            
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex space-x-8">
+              {navigation.map((item) => (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  className="text-foreground hover:text-uganda-gold transition-colors font-medium"
+                >
+                  {item.name}
+                </a>
+              ))}
+            </div>
+
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden p-2 rounded-md text-foreground hover:text-uganda-gold"
+            >
+              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+
+        {/* Mobile Navigation */}
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden bg-background border-t border-uganda-gold/20"
+            >
+              <div className="px-2 pt-2 pb-3 space-y-1">
+                {navigation.map((item) => (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    className="block px-3 py-2 text-foreground hover:text-uganda-gold transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {item.name}
+                  </a>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="pt-16 min-h-screen flex items-center justify-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-uganda-gold/10 via-transparent to-uganda-green/10"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="space-y-8"
+          >
+            <div className="space-y-4">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                className="inline-block"
+              >
+                <Crown className="h-16 w-16 text-uganda-gold mx-auto" />
+              </motion.div>
+              
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold">
+                <span className="text-uganda-green">Miss Tourism</span>
+                <br />
+                <span className="text-uganda-gold">Uganda</span>
+              </h1>
+              
+              <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
+                Experience the beauty of Uganda through the eyes of The Queen
+              </p>
+            </div>
+
+            {/* Daily Quote */}
+            <motion.div
+              key={currentQuote}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="bg-gradient-to-r from-uganda-gold/20 to-uganda-green/20 rounded-lg p-6 max-w-2xl mx-auto"
+            >
+              <p className="text-lg font-medium italic text-foreground">
+                "{quotes[currentQuote]}"
+              </p>
+            </motion.div>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-gradient-to-r from-uganda-gold to-warm-gold text-uganda-black px-8 py-4 rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all"
+              >
+                Explore Uganda
+              </motion.button>
+              
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="border-2 border-uganda-green text-uganda-green px-8 py-4 rounded-full font-semibold text-lg hover:bg-uganda-green hover:text-background transition-all"
+              >
+                Join Community
+              </motion.button>
+            </div>
+
+            {/* Scroll indicator */}
+            <motion.div
+              animate={{ y: [0, 10, 0] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
+            >
+              <ChevronDown className="h-8 w-8 text-uganda-gold" />
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Quick Access Cards */}
+      <section className="py-20 bg-gradient-to-r from-uganda-green/5 to-uganda-gold/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              { icon: Crown, title: "Queen's Corner", description: "Latest updates and travel diaries", color: "from-uganda-gold to-warm-gold" },
+              { icon: Camera, title: "Gallery", description: "Vote for your favorite photos", color: "from-uganda-green to-deep-green" },
+              { icon: Users, title: "Fan Community", description: "Join polls and quizzes", color: "from-uganda-red to-rich-red" },
+              { icon: MapPin, title: "Tourism Explorer", description: "Discover Uganda's hidden gems", color: "from-earth-brown to-uganda-gold" },
+            ].map((card, index) => (
+              <motion.div
+                key={card.title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ scale: 1.05 }}
+                className="bg-background rounded-xl p-6 shadow-lg hover:shadow-xl transition-all cursor-pointer"
+              >
+                <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${card.color} flex items-center justify-center mb-4`}>
+                  <card.icon className="h-6 w-6 text-background" />
+                </div>
+                <h3 className="text-xl font-semibold text-foreground mb-2">{card.title}</h3>
+                <p className="text-muted-foreground">{card.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-uganda-black text-cream py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <Crown className="h-8 w-8 text-uganda-gold" />
+                <span className="text-xl font-bold">Miss Tourism Uganda</span>
+              </div>
+              <p className="text-cream/80">
+                Celebrating the beauty and culture of Uganda through tourism and community.
+              </p>
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+              <ul className="space-y-2">
+                {navigation.map((item) => (
+                  <li key={item.name}>
+                    <a href={item.href} className="text-cream/80 hover:text-uganda-gold transition-colors">
+                      {item.name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Follow The Queen</h3>
+              <div className="flex space-x-4">
+                <a href="#" className="text-cream/80 hover:text-uganda-gold transition-colors">
+                  <Instagram className="h-6 w-6" />
+                </a>
+                <a href="#" className="text-cream/80 hover:text-uganda-gold transition-colors">
+                  <Facebook className="h-6 w-6" />
+                </a>
+                <a href="#" className="text-cream/80 hover:text-uganda-gold transition-colors">
+                  <Twitter className="h-6 w-6" />
+                </a>
+                <a href="#" className="text-cream/80 hover:text-uganda-gold transition-colors">
+                  <Youtube className="h-6 w-6" />
+                </a>
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Contact</h3>
+              <p className="text-cream/80">
+                Email: queen@misstourismuganda.com<br />
+                Phone: +256 XXX XXX XXX
+              </p>
+            </div>
+          </div>
+          
+          <div className="border-t border-cream/20 mt-8 pt-8 text-center">
+            <p className="text-cream/60">
+              © 2024 Miss Tourism Uganda. All rights reserved.
+            </p>
+          </div>
+        </div>
       </footer>
     </div>
   );

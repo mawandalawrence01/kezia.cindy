@@ -1,13 +1,45 @@
 @import "tailwindcss";
 
 :root {
+  /* Ugandan-inspired color palette */
+  --uganda-gold: #FFD700;
+  --uganda-green: #009639;
+  --uganda-black: #000000;
+  --uganda-red: #FF0000;
+  --uganda-yellow: #FCD116;
+  
+  /* Extended palette */
+  --warm-gold: #F4D03F;
+  --deep-green: #006400;
+  --rich-red: #B22222;
+  --cream: #FFF8DC;
+  --earth-brown: #8B4513;
+  
+  /* Background and text */
   --background: #ffffff;
   --foreground: #171717;
+  --muted: #f8f9fa;
+  --muted-foreground: #6c757d;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  
+  /* Ugandan colors */
+  --color-uganda-gold: var(--uganda-gold);
+  --color-uganda-green: var(--uganda-green);
+  --color-uganda-black: var(--uganda-black);
+  --color-uganda-red: var(--uganda-red);
+  --color-uganda-yellow: var(--uganda-yellow);
+  --color-warm-gold: var(--warm-gold);
+  --color-deep-green: var(--deep-green);
+  --color-rich-red: var(--rich-red);
+  --color-cream: var(--cream);
+  --color-earth-brown: var(--earth-brown);
+  
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -16,11 +48,50 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --muted: #1a1a1a;
+    --muted-foreground: #a1a1aa;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  line-height: 1.6;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--muted);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--uganda-gold);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--warm-gold);
+}
+
+/* Smooth animations */
+* {
+  transition: all 0.3s ease;
+}
+
+/* Custom gradient backgrounds */
+.gradient-uganda {
+  background: linear-gradient(135deg, var(--uganda-gold) 0%, var(--uganda-green) 50%, var(--uganda-red) 100%);
+}
+
+.gradient-warm {
+  background: linear-gradient(135deg, var(--warm-gold) 0%, var(--cream) 100%);
+}
+
+.gradient-nature {
+  background: linear-gradient(135deg, var(--deep-green) 0%, var(--uganda-green) 100%);
 }
