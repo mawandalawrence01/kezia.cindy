@@ -663,16 +663,30 @@ export default function FashionLifestyle() {
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
-                    <button className="flex items-center space-x-2 bg-uganda-red text-background px-4 py-2 rounded-lg">
-                      <Heart className="h-4 w-4 fill-current" />
+                    <button 
+                      onClick={() => handleLike(selectedOutfit)}
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all ${
+                        selectedOutfit.isVoted 
+                          ? 'bg-uganda-red text-background' 
+                          : 'bg-muted text-muted-foreground hover:bg-uganda-red hover:text-background'
+                      }`}
+                    >
+                      <Heart className={`h-4 w-4 ${selectedOutfit.isVoted ? 'fill-current' : ''}`} />
                       <span>{selectedOutfit.votes} votes</span>
                     </button>
                     <button 
                       onClick={() => handleShare(selectedOutfit)}
-                      className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-green"
+                      className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-green transition-colors"
                     >
                       <Share2 className="h-4 w-4" />
                       <span>Share</span>
+                    </button>
+                    <button 
+                      onClick={() => handleDownload(selectedOutfit)}
+                      className="flex items-center space-x-2 text-muted-foreground hover:text-uganda-gold transition-colors"
+                    >
+                      <Download className="h-4 w-4" />
+                      <span>Download</span>
                     </button>
                   </div>
                   
