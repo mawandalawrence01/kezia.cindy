@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
+import { CldImage } from "next-cloudinary";
 import { 
   Plus, 
   Edit, 
@@ -20,6 +22,7 @@ interface Photo {
   title: string;
   description: string;
   image: string;
+  publicId?: string;
   category: string;
   location?: string;
   date: string;
@@ -90,13 +93,13 @@ export default function PhotosPage() {
             Manage gallery photos and visual content
           </p>
         </div>
-        <a
+        <Link
           href="/admin/photos/new"
           className="flex items-center space-x-2 bg-gradient-to-r from-uganda-gold to-warm-gold text-uganda-black px-4 py-2 rounded-lg font-semibold hover:shadow-md transition-all"
         >
           <Plus className="h-5 w-5" />
           <span>Upload Photo</span>
-        </a>
+        </Link>
       </div>
 
       {/* Filters */}
@@ -141,8 +144,22 @@ export default function PhotosPage() {
             transition={{ delay: index * 0.1 }}
             className="bg-background rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all"
           >
-            <div className="h-48 bg-gradient-to-br from-uganda-green to-deep-green flex items-center justify-center">
-              <ImageIcon className="h-12 w-12 text-background" />
+            <div className="h-48 relative overflow-hidden">
+              {photo.publicId ? (
+                <CldImage
+                  src={photo.publicId}
+                  alt={photo.title}
+                  width={300}
+                  height={192}
+                  className="w-full h-full object-cover"
+                  crop="fill"
+                  gravity="auto"
+                />
+              ) : (
+                <div className="h-full bg-gradient-to-br from-uganda-green to-deep-green flex items-center justify-center">
+                  <ImageIcon className="h-12 w-12 text-background" />
+                </div>
+              )}
             </div>
             
             <div className="p-4">

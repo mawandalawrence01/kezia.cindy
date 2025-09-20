@@ -135,6 +135,7 @@ model Photo {
   title       String
   description String
   image       String
+  publicId    String?     // Cloudinary public_id for image management
   category    PhotoCategory
   location    String?
   date        DateTime    @default(now())
@@ -224,6 +225,7 @@ model Quiz {
 
   // Relations
   scores QuizScore[]
+  quizQuestions QuizQuestion[]
 
   @@map("quizzes")
 }
@@ -242,6 +244,24 @@ model QuizScore {
 
   @@unique([userId, quizId])
   @@map("quiz_scores")
+}
+
+// Quiz questions
+model QuizQuestion {
+  id          String @id @default(cuid())
+  quizId      String
+  question    String
+  options     String[] // Array of answer options
+  correctAnswer Int    // Index of correct answer (0-based)
+  explanation String?  // Optional explanation for the answer
+  order       Int      // Order of question in quiz
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@map("quiz_questions")
 }
 
 // Tourism destinations
