@@ -9,66 +9,81 @@ import {
   Upload,
   X,
   Loader2,
-  Calendar,
+  Users,
   MapPin,
+  Calendar,
+  Clock,
+  Star,
   Tag
 } from "lucide-react";
 
-interface Update {
+interface Experience {
   id: string;
   title: string;
   description: string;
+  location: string;
   date: string;
-  location?: string;
+  duration: string;
   category: string;
+  maxParticipants: number;
+  price: number;
+  rating: number;
   image?: string;
   publicId?: string;
 }
 
-export default function EditUpdatePage() {
+export default function EditExperiencePage() {
   const router = useRouter();
   const params = useParams();
-  const updateId = params.id as string;
+  const experienceId = params.id as string;
   
   const [loading, setLoading] = useState(false);
-  const [update, setUpdate] = useState<Update | null>(null);
+  const [experience, setExperience] = useState<Experience | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    date: "",
     location: "",
-    category: "LIFESTYLE"
+    date: "",
+    duration: "",
+    category: "CULTURAL",
+    maxParticipants: 10,
+    price: 0,
+    rating: 5
   });
 
   useEffect(() => {
-    const fetchUpdate = async () => {
+    const fetchExperience = async () => {
       try {
-        const response = await fetch(`/api/updates/${updateId}`);
+        const response = await fetch(`/api/experiences/${experienceId}`);
         if (response.ok) {
-          const updateData = await response.json();
-          setUpdate(updateData);
+          const experienceData = await response.json();
+          setExperience(experienceData);
           setFormData({
-            title: updateData.title,
-            description: updateData.description,
-            date: new Date(updateData.date).toISOString().split('T')[0],
-            location: updateData.location || "",
-            category: updateData.category
+            title: experienceData.title,
+            description: experienceData.description,
+            location: experienceData.location,
+            date: new Date(experienceData.date).toISOString().split('T')[0],
+            duration: experienceData.duration,
+            category: experienceData.category,
+            maxParticipants: experienceData.maxParticipants,
+            price: experienceData.price,
+            rating: experienceData.rating
           });
         } else {
-          router.push('/admin/updates');
+          router.push('/admin/experiences');
         }
       } catch (error) {
-        console.error('Error fetching update:', error);
-        router.push('/admin/updates');
+        console.error('Error fetching experience:', error);
+        router.push('/admin/experiences');
       }
     };
 
-    if (updateId) {
-      fetchUpdate();
+    if (experienceId) {
+      fetchExperience();
     }
-  }, [updateId, router]);
+  }, [experienceId, router]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -95,34 +110,38 @@ export default function EditUpdatePage() {
       const submitData = new FormData();
       submitData.append('title', formData.title);
       submitData.append('description', formData.description);
-      submitData.append('date', formData.date);
       submitData.append('location', formData.location);
+      submitData.append('date', formData.date);
+      submitData.append('duration', formData.duration);
       submitData.append('category', formData.category);
+      submitData.append('maxParticipants', formData.maxParticipants.toString());
+      submitData.append('price', formData.price.toString());
+      submitData.append('rating', formData.rating.toString());
       
       if (imageFile) {
         submitData.append('image', imageFile);
       }
 
-      const response = await fetch(`/api/admin/updates/${updateId}`, {
+      const response = await fetch(`/api/admin/experiences/${experienceId}`, {
         method: 'PUT',
         body: submitData,
       });
 
       if (response.ok) {
-        router.push('/admin/updates');
+        router.push('/admin/experiences');
       } else {
         const error = await response.json();
         alert(`Error: ${error.error}`);
       }
     } catch (error) {
-      console.error('Error updating update:', error);
-      alert('Failed to update update');
+      console.error('Error updating experience:', error);
+      alert('Failed to update experience');
     } finally {
       setLoading(false);
     }
   };
 
-  if (!update) {
+  if (!experience) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-uganda-gold"></div>
@@ -142,9 +161,9 @@ export default function EditUpdatePage() {
           <span>Back</span>
         </button>
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Edit Update</h1>
+          <h1 className="text-3xl font-bold text-foreground">Edit Experience</h1>
           <p className="text-muted-foreground mt-2">
-            Update the news and lifestyle content
+            Update the cultural experience details
           </p>
         </div>
       </div>
@@ -167,12 +186,31 @@ export default function EditUpdatePage() {
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               className="w-full px-3 py-2 border border-muted rounded-lg focus:ring-2 focus:ring-uganda-gold focus:border-transparent"
-              placeholder="Enter update title"
+              placeholder="Enter experience title"
               required
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Location */}
+            <div className="space-y-2">
+              <label htmlFor="location" className="text-sm font-medium text-foreground">
+                Location *
+              </label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  id="location"
+                  value={formData.location}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  className="w-full pl-10 pr-3 py-2 border border-muted rounded-lg focus:ring-2 focus:ring-uganda-gold focus:border-transparent"
+                  placeholder="Enter location"
+                  required
+                />
+              </div>
+            </div>
+
             {/* Date */}
             <div className="space-y-2">
               <label htmlFor="date" className="text-sm font-medium text-foreground">
@@ -190,45 +228,86 @@ export default function EditUpdatePage() {
                 />
               </div>
             </div>
+          </div>
 
-            {/* Category */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Duration */}
             <div className="space-y-2">
-              <label htmlFor="category" className="text-sm font-medium text-foreground">
-                Category *
+              <label htmlFor="duration" className="text-sm font-medium text-foreground">
+                Duration *
               </label>
               <div className="relative">
-                <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <select
-                  id="category"
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  id="duration"
+                  value={formData.duration}
+                  onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
                   className="w-full pl-10 pr-3 py-2 border border-muted rounded-lg focus:ring-2 focus:ring-uganda-gold focus:border-transparent"
+                  placeholder="e.g., 2 hours"
                   required
-                >
-                  <option value="LIFESTYLE">Lifestyle</option>
-                  <option value="NEWS">News</option>
-                  <option value="EVENT">Event</option>
-                  <option value="ANNOUNCEMENT">Announcement</option>
-                </select>
+                />
               </div>
+            </div>
+
+            {/* Max Participants */}
+            <div className="space-y-2">
+              <label htmlFor="maxParticipants" className="text-sm font-medium text-foreground">
+                Max Participants *
+              </label>
+              <div className="relative">
+                <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="number"
+                  id="maxParticipants"
+                  value={formData.maxParticipants}
+                  onChange={(e) => setFormData({ ...formData, maxParticipants: parseInt(e.target.value) })}
+                  className="w-full pl-10 pr-3 py-2 border border-muted rounded-lg focus:ring-2 focus:ring-uganda-gold focus:border-transparent"
+                  min="1"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Price */}
+            <div className="space-y-2">
+              <label htmlFor="price" className="text-sm font-medium text-foreground">
+                Price (USD) *
+              </label>
+              <input
+                type="number"
+                id="price"
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
+                className="w-full px-3 py-2 border border-muted rounded-lg focus:ring-2 focus:ring-uganda-gold focus:border-transparent"
+                min="0"
+                step="0.01"
+                required
+              />
             </div>
           </div>
 
-          {/* Location */}
+          {/* Category */}
           <div className="space-y-2">
-            <label htmlFor="location" className="text-sm font-medium text-foreground">
-              Location
+            <label htmlFor="category" className="text-sm font-medium text-foreground">
+              Category *
             </label>
             <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                type="text"
-                id="location"
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+              <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <select
+                id="category"
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 className="w-full pl-10 pr-3 py-2 border border-muted rounded-lg focus:ring-2 focus:ring-uganda-gold focus:border-transparent"
-                placeholder="Enter location (optional)"
-              />
+                required
+              >
+                <option value="CULTURAL">Cultural</option>
+                <option value="ADVENTURE">Adventure</option>
+                <option value="NATURE">Nature</option>
+                <option value="FOOD">Food</option>
+                <option value="MUSIC">Music</option>
+                <option value="ART">Art</option>
+              </select>
             </div>
           </div>
 
@@ -243,21 +322,47 @@ export default function EditUpdatePage() {
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={6}
               className="w-full px-3 py-2 border border-muted rounded-lg focus:ring-2 focus:ring-uganda-gold focus:border-transparent"
-              placeholder="Write the update description..."
+              placeholder="Describe the experience..."
               required
             />
           </div>
 
+          {/* Rating */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">
+              Rating (1-5)
+            </label>
+            <div className="flex items-center space-x-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, rating: star })}
+                  className={`p-1 ${
+                    star <= formData.rating 
+                      ? 'text-uganda-gold' 
+                      : 'text-muted-foreground hover:text-uganda-gold'
+                  } transition-colors`}
+                >
+                  <Star className={`h-6 w-6 ${star <= formData.rating ? 'fill-current' : ''}`} />
+                </button>
+              ))}
+              <span className="ml-2 text-sm text-muted-foreground">
+                {formData.rating}/5
+              </span>
+            </div>
+          </div>
+
           {/* Current Image */}
-          {update.image && !imagePreview && (
+          {experience.image && !imagePreview && (
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">
                 Current Image
               </label>
               <div className="relative">
                 <img
-                  src={update.image}
-                  alt="Current update image"
+                  src={experience.image}
+                  alt="Current experience image"
                   className="w-full h-64 object-cover rounded-lg"
                 />
               </div>
@@ -267,7 +372,7 @@ export default function EditUpdatePage() {
           {/* Image Upload */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">
-              {update.image ? "Replace Image" : "Add Image"}
+              {experience.image ? "Replace Image" : "Add Image"}
             </label>
             {!imagePreview ? (
               <div className="border-2 border-dashed border-muted rounded-lg p-8 text-center hover:border-uganda-gold transition-colors">
@@ -333,7 +438,7 @@ export default function EditUpdatePage() {
               ) : (
                 <>
                   <Save className="h-4 w-4" />
-                  <span>Update Content</span>
+                  <span>Update Experience</span>
                 </>
               )}
             </button>
