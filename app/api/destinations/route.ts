@@ -4,12 +4,13 @@ import { prisma } from '@/lib/prisma'
 export async function GET() {
   try {
     const destinations = await prisma.destination.findMany({
-      select: {
-        id: true,
-        name: true,
-        region: true,
-        type: true,
-        description: true
+      include: {
+        stories: {
+          select: {
+            id: true,
+            title: true
+          }
+        }
       },
       orderBy: {
         name: 'asc',

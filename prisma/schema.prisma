@@ -282,6 +282,7 @@ model Destination {
   hasAudio    Boolean  @default(false)
   has360      Boolean  @default(false)
   image       String?
+  publicId    String?  // Cloudinary public_id for image management
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

@@ -320,6 +320,13 @@ export default function AdminDashboard() {
             <BookOpen className="h-5 w-5 text-uganda-gold" />
             <span className="font-medium">New Story</span>
           </Link>
+          <Link
+            href="/admin/destinations/new"
+            className="flex items-center space-x-3 p-4 rounded-lg border border-muted hover:border-uganda-gold hover:bg-uganda-gold/5 transition-colors"
+          >
+            <MapPin className="h-5 w-5 text-uganda-gold" />
+            <span className="font-medium">New Destination</span>
+          </Link>
         </div>
       </div>
 

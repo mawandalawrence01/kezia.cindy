@@ -9,7 +9,6 @@ import {
   Trash2, 
   Clock, 
   MapPin, 
-  Play,
   Loader2,
   Volume2,
   BookOpen
