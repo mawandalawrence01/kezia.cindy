@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { 
   Users, 
   Image, 
@@ -256,13 +257,13 @@ export default function AdminDashboard() {
       <div className="bg-background rounded-xl p-6 shadow-lg">
         <h2 className="text-xl font-bold text-foreground mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <a
+          <Link
             href="/admin/updates/new"
             className="flex items-center space-x-3 p-4 rounded-lg border border-muted hover:border-uganda-gold hover:bg-uganda-gold/5 transition-colors"
           >
             <MessageCircle className="h-5 w-5 text-uganda-gold" />
             <span className="font-medium">Create New Update</span>
-          </a>
+          </Link>
           <a
             href="/admin/events/new"
             className="flex items-center space-x-3 p-4 rounded-lg border border-muted hover:border-uganda-gold hover:bg-uganda-gold/5 transition-colors"
@@ -270,13 +271,13 @@ export default function AdminDashboard() {
             <Calendar className="h-5 w-5 text-uganda-gold" />
             <span className="font-medium">Add New Event</span>
           </a>
-          <a
+          <Link
             href="/admin/photos/new"
             className="flex items-center space-x-3 p-4 rounded-lg border border-muted hover:border-uganda-gold hover:bg-uganda-gold/5 transition-colors"
           >
             <Image className="h-5 w-5 text-uganda-gold" />
             <span className="font-medium">Upload Photo</span>
-          </a>
+          </Link>
           <a
             href="/admin/competitions/new"
             className="flex items-center space-x-3 p-4 rounded-lg border border-muted hover:border-uganda-gold hover:bg-uganda-gold/5 transition-colors"

@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { CldImage } from "next-cloudinary";
 import { 
   Plus, 
   Edit, 

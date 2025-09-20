@@ -12,7 +12,6 @@ import {
   MapPin, 
   Heart,
   MessageCircle,
-  Eye,
   Loader2,
   FileText
 } from "lucide-react";
