@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
+import { CldImage } from "next-cloudinary";
 import { 
   Plus, 
   Edit, 
@@ -22,6 +24,7 @@ interface Update {
   type: string;
   location?: string;
   image?: string;
+  publicId?: string;
   publishedAt: string;
   likes: { id: string; userId: string; updateId: string }[];
   comments: { id: string; content: string; userId: string; updateId: string }[];
@@ -90,13 +93,13 @@ export default function UpdatesPage() {
             Manage Queen&apos;s updates, travel diaries, and experiences
           </p>
         </div>
-        <a
+        <Link
           href="/admin/updates/new"
           className="flex items-center space-x-2 bg-gradient-to-r from-uganda-gold to-warm-gold text-uganda-black px-4 py-2 rounded-lg font-semibold hover:shadow-md transition-all"
         >
           <Plus className="h-5 w-5" />
           <span>New Update</span>
-        </a>
+        </Link>
       </div>
 
       {/* Filters */}
@@ -178,20 +181,20 @@ export default function UpdatesPage() {
               </div>
 
               <div className="flex items-center space-x-2 ml-4">
-                <a
+                <Link
                   href={`/admin/updates/${update.id}`}
                   className="p-2 text-muted-foreground hover:text-uganda-green transition-colors"
                   title="View"
                 >
                   <Eye className="h-4 w-4" />
-                </a>
-                <a
+                </Link>
+                <Link
                   href={`/admin/updates/${update.id}/edit`}
                   className="p-2 text-muted-foreground hover:text-uganda-gold transition-colors"
                   title="Edit"
                 >
                   <Edit className="h-4 w-4" />
-                </a>
+                </Link>
                 <button
                   onClick={() => handleDelete(update.id)}
                   className="p-2 text-muted-foreground hover:text-uganda-red transition-colors"

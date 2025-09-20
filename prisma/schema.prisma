@@ -87,6 +87,7 @@ model Update {
   type        UpdateType
   location    String?
   image       String?
+  publicId    String?  // Cloudinary public_id for image management
   publishedAt DateTime @default(now())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
