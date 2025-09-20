@@ -299,6 +299,20 @@ export default function AdminDashboard() {
             <BookOpen className="h-5 w-5 text-uganda-gold" />
             <span className="font-medium">Add Daily Quote</span>
           </a>
+          <Link
+            href="/admin/travel-diaries/new"
+            className="flex items-center space-x-3 p-4 rounded-lg border border-muted hover:border-uganda-gold hover:bg-uganda-gold/5 transition-colors"
+          >
+            <MapPin className="h-5 w-5 text-uganda-gold" />
+            <span className="font-medium">New Travel Diary</span>
+          </Link>
+          <Link
+            href="/admin/experiences/new"
+            className="flex items-center space-x-3 p-4 rounded-lg border border-muted hover:border-uganda-gold hover:bg-uganda-gold/5 transition-colors"
+          >
+            <Users className="h-5 w-5 text-uganda-gold" />
+            <span className="font-medium">New Experience</span>
+          </Link>
         </div>
       </div>
 

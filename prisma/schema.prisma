@@ -106,6 +106,7 @@ model TravelDiary {
   location    String
   content     String
   images      String[]
+  publicIds   String[] // Cloudinary public_ids for image management
   highlights  String[]
   rating      Int      @default(5)
   date        DateTime
