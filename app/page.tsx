@@ -325,6 +325,22 @@ export default function Home() {
             <p className="text-cream/60">
               © 2024 Miss Tourism Uganda. All rights reserved.
             </p>
+            <div className="mt-4 pt-4 border-t border-cream/10">
+              <p className="text-cream/60 text-sm">
+                Software designed and developed by{" "}
+                <a 
+                  href="https://lawmwad.vercel.app/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-uganda-gold font-semibold hover:text-warm-gold transition-colors"
+                >
+                  Lawmwad Technologies
+                </a>
+              </p>
+              <p className="text-cream/60 text-sm mt-1">
+                WhatsApp: <a href="https://wa.me/256745033924" className="text-uganda-gold hover:text-warm-gold transition-colors">+256 745 033924</a>
+              </p>
+            </div>
           </div>
         </div>
       </footer>
