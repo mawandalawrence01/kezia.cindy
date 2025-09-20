@@ -96,19 +96,31 @@ export async function PUT(
     // Handle new audio upload
     if (audioFile && audioFile.size > 0) {
       try {
+        console.log('Processing audio file:', {
+          name: audioFile.name,
+          size: audioFile.size,
+          type: audioFile.type
+        });
+
         // Delete old audio if it exists
         if (publicId) {
+          console.log('Deleting old audio:', publicId);
           await deleteAudioFromCloudinary(publicId);
         }
 
         // Upload new audio
+        console.log('Uploading new audio file...');
         const uploadResult = await uploadAudioToCloudinary(audioFile, 'the_queen/stories');
         audioUrl = uploadResult.secure_url;
         publicId = uploadResult.public_id;
+        console.log('Audio upload successful:', { audioUrl, publicId });
       } catch (uploadError) {
         console.error('Error uploading new audio:', uploadError);
         return NextResponse.json(
-          { error: 'Failed to upload new audio' },
+          { 
+            error: 'Failed to upload new audio',
+            details: uploadError instanceof Error ? uploadError.message : 'Unknown error'
+          },
           { status: 500 }
         );
       }

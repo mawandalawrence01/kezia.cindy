@@ -81,28 +81,45 @@ export async function uploadAudioToCloudinary(
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
+    // Determine resource type based on file extension
+    const fileExtension = file.name.split('.').pop()?.toLowerCase();
+    let resourceType: 'image' | 'auto' | 'video' | 'raw' = 'auto'; // Let Cloudinary auto-detect
+    
+    // For audio files, we can use 'auto' or 'raw' depending on the format
+    if (['mp3', 'wav', 'aac', 'ogg', 'm4a', 'flac'].includes(fileExtension || '')) {
+      resourceType = 'auto'; // Let Cloudinary handle it automatically
+    }
+
+    console.log(`Uploading audio file: ${file.name}, size: ${file.size}, type: ${file.type}, resource_type: ${resourceType}`);
+
     return new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         {
           folder,
-          upload_preset: 'the_queen',
-          resource_type: 'video', // Cloudinary treats audio as video
+          resource_type: resourceType,
+          format: fileExtension, // Specify format explicitly
+          quality: 'auto',
+          // Try without upload_preset first, as it might be causing issues
+          // upload_preset: 'the_queen',
         },
         (error, result) => {
           if (error) {
+            console.error('Cloudinary upload error:', error);
             reject(error);
           } else if (result) {
+            console.log('Upload successful:', result.public_id);
             resolve({
               public_id: result.public_id,
               secure_url: result.secure_url,
             });
           } else {
-            reject(new Error('Upload failed'));
+            reject(new Error('Upload failed - no result returned'));
           }
         }
       ).end(buffer);
     });
   } catch (error) {
+    console.error('Audio upload error:', error);
     throw new Error(`Failed to upload audio: ${error}`);
   }
 }
@@ -110,8 +127,26 @@ export async function uploadAudioToCloudinary(
 // Utility function to delete audio from Cloudinary
 export async function deleteAudioFromCloudinary(publicId: string): Promise<void> {
   try {
-    await cloudinary.uploader.destroy(publicId, { resource_type: 'video' });
+    console.log(`Deleting audio from Cloudinary: ${publicId}`);
+    // Try different resource types to find and delete the file
+    const resourceTypes = ['auto', 'video', 'raw'];
+    
+    for (const resourceType of resourceTypes) {
+      try {
+        const result = await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+        if (result.result === 'ok') {
+          console.log(`Delete successful with resource_type: ${resourceType}`, result);
+          return;
+        }
+      } catch (deleteError) {
+        console.log(`Failed to delete with resource_type ${resourceType}:`, deleteError instanceof Error ? deleteError.message : 'Unknown error');
+        continue;
+      }
+    }
+    
+    console.log('Could not delete file with any resource type');
   } catch (error) {
+    console.error('Error deleting audio from Cloudinary:', error);
     throw new Error(`Failed to delete audio: ${error}`);
   }
 }

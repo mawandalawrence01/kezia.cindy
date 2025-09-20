@@ -51,6 +51,29 @@ export default function NewStoryPage() {
   const handleAudioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validate file type
+      const allowedTypes = ['audio/mp3', 'audio/wav', 'audio/mpeg', 'audio/mp4', 'audio/aac', 'audio/ogg'];
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+      const allowedExtensions = ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'];
+      
+      if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension || '')) {
+        alert('Please select a valid audio file (MP3, WAV, M4A, AAC, OGG, FLAC)');
+        return;
+      }
+      
+      // Validate file size (50MB limit)
+      if (file.size > 50 * 1024 * 1024) {
+        alert('File size must be less than 50MB');
+        return;
+      }
+      
+      console.log('Audio file selected:', {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        extension: fileExtension
+      });
+      
       setAudioFile(file);
       const url = URL.createObjectURL(file);
       setAudioPreview(url);
