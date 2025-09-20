@@ -298,6 +298,7 @@ model Story {
   destinationName String
   duration     String
   audioUrl     String?
+  publicId     String?  // Cloudinary public_id for audio management
   transcript   String
   destinationId String
   createdAt    DateTime @default(now())

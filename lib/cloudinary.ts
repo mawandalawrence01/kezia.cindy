@@ -71,3 +71,47 @@ export async function updateImageInCloudinary(
     throw new Error(`Failed to update image: ${error}`);
   }
 }
+
+// Utility function to upload audio to Cloudinary
+export async function uploadAudioToCloudinary(
+  file: File,
+  folder: string = 'the_queen/stories'
+): Promise<{ public_id: string; secure_url: string }> {
+  try {
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    return new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          folder,
+          upload_preset: 'the_queen',
+          resource_type: 'video', // Cloudinary treats audio as video
+        },
+        (error, result) => {
+          if (error) {
+            reject(error);
+          } else if (result) {
+            resolve({
+              public_id: result.public_id,
+              secure_url: result.secure_url,
+            });
+          } else {
+            reject(new Error('Upload failed'));
+          }
+        }
+      ).end(buffer);
+    });
+  } catch (error) {
+    throw new Error(`Failed to upload audio: ${error}`);
+  }
+}
+
+// Utility function to delete audio from Cloudinary
+export async function deleteAudioFromCloudinary(publicId: string): Promise<void> {
+  try {
+    await cloudinary.uploader.destroy(publicId, { resource_type: 'video' });
+  } catch (error) {
+    throw new Error(`Failed to delete audio: ${error}`);
+  }
+}
