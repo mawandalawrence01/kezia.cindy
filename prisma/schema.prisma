@@ -318,6 +318,7 @@ model Outfit {
   description         String
   category            OutfitCategory
   image               String
+  publicId            String?     // Cloudinary public_id for image management
   designer            String
   occasion            String
   culturalSignificance String

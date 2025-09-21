@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSession } from "next-auth/react";
+import { CldImage } from "next-cloudinary";
 import { 
   Heart, 
   Share2, 
@@ -19,53 +21,80 @@ interface Photo {
   title: string;
   description: string;
   image: string;
-  category: 'nature' | 'culture' | 'fashion' | 'events';
-  votes: number;
-  isVoted: boolean;
+  publicId?: string;
+  category: 'NATURE' | 'CULTURE' | 'FASHION' | 'EVENTS';
+  votes: { id: string; userId: string; photoId: string }[];
   date: string;
-  location: string;
-  tags: string[];
+  location?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface TopPick {
-  id: number;
+  id: string;
   title: string;
   image: string;
-  votes: number;
+  publicId?: string;
+  votes: { id: string; userId: string; photoId: string }[];
   period: 'weekly' | 'monthly';
-  winner: string;
+  category: string;
 }
 
 export default function Gallery() {
+  const { data: session } = useSession();
   const [activeCategory, setActiveCategory] = useState<'all' | 'nature' | 'culture' | 'fashion' | 'events'>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [topPicks, setTopPicks] = useState<{ weekly: TopPick[]; monthly: TopPick[] }>({ weekly: [], monthly: [] });
   const [loading, setLoading] = useState(true);
   const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
+  const [userVotes, setUserVotes] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const fetchPhotos = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('/api/photos');
-        const data = await response.json();
-        setPhotos(data);
+        // Fetch photos and top picks in parallel
+        const [photosResponse, topPicksResponse] = await Promise.all([
+          fetch('/api/photos'),
+          fetch('/api/photos/top-picks')
+        ]);
+        
+        const photosData = await photosResponse.json();
+        const topPicksData = await topPicksResponse.json();
+        
+        setPhotos(photosData);
+        setTopPicks({
+          weekly: topPicksData.weekly || [],
+          monthly: topPicksData.monthly || []
+        });
+
+        // Track user votes if logged in
+        if (session?.user?.id) {
+          const userVoteIds = new Set<string>(
+            photosData
+              .flatMap((photo: Photo) => photo.votes)
+              .filter((vote: { userId: string; photoId: string }) => vote.userId === session.user.id)
+              .map((vote: { userId: string; photoId: string }) => vote.photoId)
+          );
+          setUserVotes(userVoteIds);
+        }
       } catch (error) {
-        console.error('Error fetching photos:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPhotos();
-  }, []);
+    fetchData();
+  }, [session?.user?.id]);
 
   const categories = [
     { id: 'all', label: 'All Photos', count: photos.length },
-    { id: 'nature', label: 'Nature & Wildlife', count: photos.filter(p => p.category === 'nature').length },
-    { id: 'culture', label: 'Cultural Heritage', count: photos.filter(p => p.category === 'culture').length },
-    { id: 'fashion', label: 'Fashion & Style', count: photos.filter(p => p.category === 'fashion').length },
-    { id: 'events', label: 'Events & Appearances', count: photos.filter(p => p.category === 'events').length }
+    { id: 'nature', label: 'Nature & Wildlife', count: photos.filter(p => p.category === 'NATURE').length },
+    { id: 'culture', label: 'Cultural Heritage', count: photos.filter(p => p.category === 'CULTURE').length },
+    { id: 'fashion', label: 'Fashion & Style', count: photos.filter(p => p.category === 'FASHION').length },
+    { id: 'events', label: 'Events & Appearances', count: photos.filter(p => p.category === 'EVENTS').length }
   ];
 
   if (loading) {
@@ -82,32 +111,62 @@ export default function Gallery() {
   }
 
 
-  const topPicks: TopPick[] = [
-    {
-      id: 1,
-      title: "Gorilla Encounter",
-      image: "/api/placeholder/300/400",
-      votes: 2134,
-      period: 'weekly',
-      winner: "Nature & Wildlife"
-    },
-    {
-      id: 2,
-      title: "Elegant Evening Gown",
-      image: "/api/placeholder/300/400",
-      votes: 1567,
-      period: 'monthly',
-      winner: "Fashion & Style"
-    }
+  // Combine weekly and monthly top picks for display
+  const displayTopPicks = [
+    ...topPicks.weekly.slice(0, 1).map(pick => ({ ...pick, period: 'weekly' as const })),
+    ...topPicks.monthly.slice(0, 1).map(pick => ({ ...pick, period: 'monthly' as const }))
   ];
 
   const filteredPhotos = activeCategory === 'all' 
     ? photos 
     : photos.filter(photo => photo.category.toLowerCase() === activeCategory);
 
-  const handleVote = (photoId: string) => {
-    // In a real app, this would make an API call
-    console.log(`Voted for photo ${photoId}`);
+  const handleVote = async (photoId: string) => {
+    if (!session?.user?.id) {
+      alert('Please log in to vote for photos');
+      return;
+    }
+
+    const isVoted = userVotes.has(photoId);
+    
+    try {
+      const response = await fetch(`/api/photos/${photoId}/vote`, {
+        method: isVoted ? 'DELETE' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        
+        // Update local state
+        setPhotos(prevPhotos => 
+          prevPhotos.map(photo => 
+            photo.id === photoId 
+              ? { ...photo, votes: result.voted ? [...photo.votes, { id: '', userId: session.user.id, photoId }] : photo.votes.filter(v => v.userId !== session.user.id) }
+              : photo
+          )
+        );
+
+        // Update user votes
+        if (result.voted) {
+          setUserVotes(prev => new Set([...prev, photoId]));
+        } else {
+          setUserVotes(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(photoId);
+            return newSet;
+          });
+        }
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to vote');
+      }
+    } catch (error) {
+      console.error('Error voting:', error);
+      alert('Failed to vote for photo');
+    }
   };
 
   const handleShare = (photo: Photo) => {
@@ -134,16 +193,9 @@ export default function Gallery() {
     document.body.removeChild(link);
   };
 
-  const handleViewPhoto = (photoId: number) => {
-    // In a real app, this would open the photo in a modal or navigate to a photo page
-    console.log(`Viewing photo ${photoId}`);
-    alert('Photo viewer would open here!');
-  };
-
   const handleLoadMore = () => {
-    // In a real app, this would load more photos from the API
+    // TODO: Implement pagination for loading more photos
     console.log('Loading more photos...');
-    alert('More photos would load here!');
   };
 
   const handleCommentCountChange = (photoId: string, count: number) => {
@@ -184,7 +236,7 @@ export default function Gallery() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {topPicks.map((pick, index) => (
+            {displayTopPicks.map((pick, index) => (
               <motion.div
                 key={pick.id}
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -193,9 +245,21 @@ export default function Gallery() {
                 className="bg-background rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all"
               >
                 <div className="relative">
+                  {pick.publicId ? (
+                    <CldImage
+                      src={pick.publicId}
+                      alt={pick.title}
+                      width={400}
+                      height={256}
+                      className="w-full h-64 object-cover"
+                      crop="fill"
+                      gravity="auto"
+                    />
+                  ) : (
                   <div className="h-64 bg-gradient-to-br from-uganda-gold to-warm-gold flex items-center justify-center">
                     <Camera className="h-16 w-16 text-uganda-black" />
                   </div>
+                  )}
                   <div className="absolute top-4 right-4 bg-background/90 rounded-full px-3 py-1">
                     <span className="text-sm font-semibold text-uganda-gold">
                       {pick.period === 'weekly' ? 'Weekly' : 'Monthly'} Winner
@@ -205,15 +269,21 @@ export default function Gallery() {
                 
                 <div className="p-6">
                   <h4 className="text-xl font-bold text-foreground mb-2">{pick.title}</h4>
-                  <p className="text-muted-foreground mb-4">{pick.winner}</p>
+                  <p className="text-muted-foreground mb-4">{pick.category}</p>
                   
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Heart className="h-5 w-5 text-uganda-red" />
-                      <span className="font-semibold text-foreground">{pick.votes} votes</span>
+                      <span className="font-semibold text-foreground">{pick.votes.length} votes</span>
                     </div>
                     <button 
-                      onClick={() => handleViewPhoto(pick.id)}
+                      onClick={() => {
+                        // Find the full photo data from the photos array
+                        const fullPhoto = photos.find(photo => photo.id === pick.id);
+                        if (fullPhoto) {
+                          setSelectedPhoto(fullPhoto);
+                        }
+                      }}
                       className="bg-gradient-to-r from-uganda-gold to-warm-gold text-uganda-black px-4 py-2 rounded-lg font-semibold hover:shadow-md transition-all"
                     >
                       View Photo
@@ -287,8 +357,22 @@ export default function Gallery() {
                 }`}
                 onClick={() => setSelectedPhoto(photo)}
               >
-                <div className={`${viewMode === 'list' ? 'w-48 h-32' : 'h-64'} bg-gradient-to-br from-uganda-green to-deep-green flex items-center justify-center relative`}>
+                <div className={`${viewMode === 'list' ? 'w-48 h-32' : 'h-64'} relative overflow-hidden`}>
+                  {photo.publicId ? (
+                    <CldImage
+                      src={photo.publicId}
+                      alt={photo.title}
+                      width={viewMode === 'list' ? 192 : 300}
+                      height={viewMode === 'list' ? 128 : 256}
+                      className="w-full h-full object-cover"
+                      crop="fill"
+                      gravity="auto"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-uganda-green to-deep-green flex items-center justify-center">
                   <Camera className="h-12 w-12 text-background" />
+                    </div>
+                  )}
                   <div className="absolute top-2 right-2 bg-background/90 rounded-full px-2 py-1">
                     <span className="text-xs font-medium text-uganda-green">
                       {photo.category}
@@ -316,10 +400,14 @@ export default function Gallery() {
                         e.stopPropagation();
                         handleVote(photo.id);
                       }}
-                      className="flex items-center space-x-2 px-3 py-2 rounded-lg transition-all bg-muted text-muted-foreground hover:bg-uganda-red hover:text-background"
+                      className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all ${
+                        userVotes.has(photo.id)
+                          ? 'bg-uganda-red text-background'
+                          : 'bg-muted text-muted-foreground hover:bg-uganda-red hover:text-background'
+                      }`}
                     >
-                      <Heart className="h-4 w-4" />
-                      <span className="text-sm font-medium">{photo.votes || 0}</span>
+                      <Heart className={`h-4 w-4 ${userVotes.has(photo.id) ? 'fill-current' : ''}`} />
+                      <span className="text-sm font-medium">{photo.votes.length}</span>
                     </button>
                     
                     <div className="flex items-center space-x-2">
@@ -377,8 +465,22 @@ export default function Gallery() {
               className="bg-background rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="h-96 bg-gradient-to-br from-uganda-green to-deep-green flex items-center justify-center">
-                <Camera className="h-24 w-24 text-background" />
+              <div className="h-96 relative overflow-hidden">
+                {selectedPhoto.publicId ? (
+                  <CldImage
+                    src={selectedPhoto.publicId}
+                    alt={selectedPhoto.title}
+                    width={800}
+                    height={384}
+                    className="w-full h-full object-cover"
+                    crop="fill"
+                    gravity="auto"
+                  />
+                ) : (
+                  <div className="h-full bg-gradient-to-br from-uganda-green to-deep-green flex items-center justify-center">
+                    <Camera className="h-24 w-24 text-background" />
+                  </div>
+                )}
               </div>
               
               <div className="p-6">
@@ -397,9 +499,16 @@ export default function Gallery() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      <button className="flex items-center space-x-2 bg-uganda-red text-background px-4 py-2 rounded-lg">
-                        <Heart className="h-4 w-4 fill-current" />
-                        <span>{selectedPhoto.votes || 0} votes</span>
+                      <button 
+                        onClick={() => handleVote(selectedPhoto.id)}
+                        className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all ${
+                          userVotes.has(selectedPhoto.id)
+                            ? 'bg-uganda-red text-background'
+                            : 'bg-muted text-muted-foreground hover:bg-uganda-red hover:text-background'
+                        }`}
+                      >
+                        <Heart className={`h-4 w-4 ${userVotes.has(selectedPhoto.id) ? 'fill-current' : ''}`} />
+                        <span>{selectedPhoto.votes.length} votes</span>
                       </button>
                       <button 
                         onClick={() => handleShare(selectedPhoto)}
