@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { useSession, signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { 
   LayoutDashboard, 
   Users, 
@@ -49,21 +49,14 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+  const { session, status, isAdmin, isLoading } = useAdminAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/admin/login");
-    }
-  }, [status, router]);
 
   const handleLogout = () => {
     signOut({ callbackUrl: "/admin/login" });
   };
 
-  if (status === "loading") {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-cream/30 to-warm-gold/20 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-uganda-gold"></div>
@@ -71,7 +64,7 @@ export default function AdminLayout({
     );
   }
 
-  if (status === "unauthenticated") {
+  if (!isAdmin) {
     return null;
   }
 
